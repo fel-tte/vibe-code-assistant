@@ -1,0 +1,68 @@
+name: alembic-check
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+jobs:
+  alembic:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: render_factory
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d render_factory"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/render_factory
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Check single Alembic head
+        working-directory: backend
+        run: |
+          python scripts/check_migration_head.py
+
+      - name: Upgrade database to head
+        working-directory: backend
+        run: |
+          alembic upgrade head
+
+      - name: Ensure no new autogenerate diff exists
+        working-directory: backend
+        run: |
+          alembic revision --autogenerate -m "ci_tmp_check"
+          LATEST_FILE=$(ls -t alembic/versions/*.py | head -n 1)
+          if grep -q "pass" "$LATEST_FILE"; then
+            echo "No schema drift detected."
+            rm "$LATEST_FILE"
+          else
+            echo "Schema drift detected. Model changes are missing a migration."
+            cat "$LATEST_FILE"
+            rm "$LATEST_FILE"
+            exit 1
+          fi
