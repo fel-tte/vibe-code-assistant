@@ -65,7 +65,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           cache: "pip"
           cache-dependency-path: |
             backend/requirements.txt
@@ -125,6 +125,24 @@ jobs:
           else
             python -m alembic --version
           fi
+
+      - name: Assert Alembic graph
+        run: |
+          python - <<'PY'
+          from alembic.config import Config
+          from alembic.script import ScriptDirectory
+
+          cfg = Config("alembic.ini")
+          script = ScriptDirectory.from_config(cfg)
+          heads = script.get_heads()
+          assert heads == ["20260412_9999"], heads
+          revs = {r.revision for r in script.walk_revisions()}
+          assert "20260412_0025" in revs, "missing 20260412_0025"
+          print("Alembic graph OK")
+          PY
+
+      - name: Run Alembic heads
+        run: python -m alembic -c alembic.ini heads
 
       - name: Raw topology log
         run: |
