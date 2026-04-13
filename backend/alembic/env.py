@@ -96,24 +96,6 @@ def run_migrations_online() -> None:
 
 
 if context.is_offline_mode():
-    context.configure(
-    url=url,
-    target_metadata=target_metadata,
-    literal_binds=True,
-    compare_type=True,
-    compare_server_default=True,
-    include_object=include_object,
-    process_revision_directives=process_revision_directives,
-)
     run_migrations_offline()
 else:
-    context.configure(
-    connection=connection,
-    target_metadata=target_metadata,
-    compare_type=True,
-    compare_server_default=True,
-    include_object=include_object,
-    process_revision_directives=process_revision_directives,
-    render_as_batch=False,
-)
     run_migrations_online()
