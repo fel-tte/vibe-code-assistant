@@ -53,7 +53,7 @@ jobs:
 
     env:
       PYTHONUNBUFFERED: "1"
-      DATABASE_URL: postgresql+psycopg2://app:app@127.0.0.1:5432/app_test
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/render_factory
       ALEMBIC_CONFIG: alembic.ini
       ALEMBIC_ALLOWED_BRANCHPOINTS: ""
       ALEMBIC_EXPECTED_BASES: ""
