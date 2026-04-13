@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
@@ -12,6 +14,8 @@ from app.services.healthcheck_service import (
     summarize_health,
 )
 from app.services.render_fsm import describe_fsm, get_transition_metrics_snapshot
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["health"])
 
@@ -30,57 +34,63 @@ async def healthz() -> dict:
     return summarize_health(checks)
 
 
+def _run_check(check_fn) -> bool:
+    """
+    Execute *check_fn* and return only a boolean status.
+
+    Any exception raised by or message stored in the check result is logged
+    server-side and is *never* forwarded to the HTTP response, preventing
+    stack-trace / connection-string leakage (CWE-209).
+    """
+    try:
+        result = check_fn()
+        if isinstance(result, dict) and not result.get("ok"):
+            logger.warning(
+                "Health check degraded for %s",
+                result.get("service", check_fn.__name__),
+            )
+            return False
+        return bool(result.get("ok")) if isinstance(result, dict) else False
+    except Exception:
+        logger.exception("Health check raised an exception: %s", check_fn.__name__)
+        return False
+
+
 @router.get("/healthz/detailed")
 async def healthz_detailed() -> JSONResponse:
     """
-    Detailed health check that returns 200 when all subsystems are healthy
-    and 503 when any subsystem is degraded.
+    Detailed health check – returns HTTP 200 when all subsystems are healthy
+    and HTTP 503 when any subsystem is degraded.
 
-    Only the ``ok``, ``service``, and ``workers``/``worker_count`` fields are
-    forwarded to the caller.  Error strings produced by failed checks are logged
-    server-side and never sent to the client to prevent internal details from
-    leaking (CWE-209 / CodeQL py/stack-trace-exposure).
+    Only boolean ``ok`` flags are forwarded to the caller.  Detailed error
+    strings are logged server-side only (CWE-209 / CodeQL py/stack-trace-exposure).
     """
-    import logging as _logging
+    from app.services.healthcheck_service import (  # noqa: PLC0415
+        check_celery_broker,
+        check_celery_workers,
+        check_postgres,
+    )
 
-    _log = _logging.getLogger(__name__)
+    postgres_ok = _run_check(check_postgres)
+    redis_ok = _run_check(check_redis)
+    broker_ok = _run_check(check_celery_broker)
+    workers_ok = _run_check(check_celery_workers)
 
-    raw = build_full_health_payload()
-    status_code = 200 if raw.get("ok") else 503
-
-    # Build a response that contains no user-supplied or exception-derived strings.
-    # Only structurally-safe scalar values (bool, int, list of strings) are included.
-    _SAFE_SCALAR_KEYS = frozenset({"ok", "service", "worker_count", "workers", "status_code"})
-
-    def _safe_check(check: object) -> dict:
-        if not isinstance(check, dict):
-            return {"ok": False}
-        result: dict = {}
-        for k, v in check.items():
-            if k not in _SAFE_SCALAR_KEYS:
-                continue
-            if isinstance(v, (bool, int)):
-                result[k] = v
-            elif isinstance(v, list) and all(isinstance(i, str) for i in v):
-                result[k] = v
-        if "error" in check:
-            _log.warning("Health check failure for %s", check.get("service", "unknown"))
-            result["ok"] = False
-        return result
-
-    checks_raw = raw.get("checks", {})
-    safe_checks = {
-        name: _safe_check(val)
-        for name, val in (checks_raw.items() if isinstance(checks_raw, dict) else [])
-    }
+    all_ok = postgres_ok and redis_ok and broker_ok and workers_ok
 
     payload: dict = {
-        "ok": bool(raw.get("ok")),
-        "checks": safe_checks,
+        "ok": all_ok,
+        "checks": {
+            "postgres": {"ok": postgres_ok},
+            "redis": {"ok": redis_ok},
+            "celery_broker": {"ok": broker_ok},
+            "celery_workers": {"ok": workers_ok},
+        },
     }
-    if not raw.get("ok"):
+    if not all_ok:
         payload["degraded"] = True
-    return JSONResponse(content=payload, status_code=status_code)
+
+    return JSONResponse(content=payload, status_code=200 if all_ok else 503)
 
 
 @router.get("/healthz/postgres")

@@ -3,9 +3,8 @@ Service for recording timeline events against a governance execution plan.
 """
 from __future__ import annotations
 
-import uuid
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -30,7 +29,7 @@ class GovernancePlanTimelineService:
         self,
         plan_id: str,
         event_type: str,
-        payload_json: Optional[dict[str, Any]] = None,
+        payload_json: dict[str, Any] | None = None,
     ) -> None:
         """
         Persist a timeline event for the given execution plan.

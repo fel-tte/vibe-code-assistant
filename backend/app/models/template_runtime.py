@@ -1,7 +1,7 @@
 from __future__ import annotations
 import uuid
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from sqlalchemy import Text, Integer, String, DateTime, ForeignKey, Numeric, JSON
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
