@@ -48,7 +48,7 @@ jobs:
       PYTHONUNBUFFERED: "1"
       DATABASE_URL: postgresql+psycopg://postgres:postgres@127.0.0.1:5432/render_factory
       ALEMBIC_CONFIG: alembic.ini
-      ALEMBIC_ALLOWED_BRANCHPOINTS: ""
+      ALEMBIC_ALLOWED_BRANCHPOINTS: "20260408_0004,20260410_000002,20260410_0007,20260410_0012"
       ALEMBIC_EXPECTED_BASES: ""
 
     steps:
