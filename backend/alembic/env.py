@@ -14,7 +14,8 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 BASE_DIR = Path(__file__).resolve().parents[1]
-sys.path.append(str(BASE_DIR))
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
 
 try:
     from dotenv import load_dotenv
@@ -25,21 +26,15 @@ except Exception:
     pass
 
 from app.db.base import Base
-
-# import all models explicitly
-from app.models.provider_webhook_event import ProviderWebhookEvent
-from app.models.render_job import RenderJob
-from app.models.render_scene_task import RenderSceneTask
+from app.models import *  # noqa: F401,F403
 
 
 target_metadata = Base.metadata
 
-def include_object(object_, name, type_, reflected, compare_to):
-    return True
-
 
 def process_revision_directives(context, revision, directives):
-    if getattr(config.cmd_opts, "autogenerate", False):
+    cmd_opts = getattr(config, "cmd_opts", None)
+    if cmd_opts and getattr(cmd_opts, "autogenerate", False):
         script = directives[0]
         if script.upgrade_ops.is_empty():
             directives[:] = []
@@ -47,11 +42,15 @@ def process_revision_directives(context, revision, directives):
 
 
 def get_database_url() -> str:
-    return os.getenv("DATABASE_URL") or config.get_main_option("sqlalchemy.url")
+    url = os.getenv("DATABASE_URL") or config.get_main_option("sqlalchemy.url")
+    if not url:
+        raise RuntimeError(
+            "DATABASE_URL is not set and sqlalchemy.url is missing from alembic.ini"
+        )
+    return url
 
 
 def include_object(object_, name, type_, reflected, compare_to):
-    # bỏ qua bảng Alembic nội bộ thì không cần filter
     return True
 
 
@@ -88,7 +87,6 @@ def run_migrations_online() -> None:
             compare_type=True,
             compare_server_default=True,
             include_object=include_object,
-            render_as_batch=False,
         )
 
         with context.begin_transaction():
