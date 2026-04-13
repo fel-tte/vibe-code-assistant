@@ -22,7 +22,7 @@ router = APIRouter(prefix="/api/v1/templates", tags=["templates"])
 def extract_template(payload: TemplateExtractRequest, db: Session = Depends(get_db)):
     repo = TemplateFactoryRepository(db)
     extraction = TemplateExtractionService(repo).queue_extraction(payload.source_project_id, payload.auto_publish)
-        return {"id": str(extraction.id), "status": extraction.status}
+    return {"id": str(extraction.id), "status": extraction.status}
 
 @router.get("/extractions/{extraction_id}")
 def get_extraction(extraction_id: str, db: Session = Depends(get_db)):
@@ -42,7 +42,7 @@ def list_templates(status: str | None = None, db: Session = Depends(get_db)):
 def create_template(payload: TemplatePackCreate, db: Session = Depends(get_db)):
     repo = TemplateFactoryRepository(db)
     row = TemplateLibraryService(repo).create_template(payload.model_dump())
-        return row
+    return row
 
 @router.get("/{template_id}")
 def get_template(template_id: str, db: Session = Depends(get_db)):
