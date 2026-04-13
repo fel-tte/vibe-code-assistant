@@ -116,7 +116,7 @@ function buildFailureCallback(provider: string, scene: Json, jobId: string): Jso
       id: `evt-fail-pipeline-${jobId}`,
       taskId: scene.provider_task_id,
       status: "FAILED",
-      error: "Synthetic pipeline failure",
+      error: "Intentional pipeline test failure",
       event: "task.failed",
     };
   }
@@ -126,7 +126,7 @@ function buildFailureCallback(provider: string, scene: Json, jobId: string): Jso
       data: {
         task_id: scene.provider_task_id,
         task_status: "failed",
-        fail_reason: "Synthetic pipeline failure",
+        fail_reason: "Intentional pipeline test failure",
       },
       event: "kling.task.failed",
     };
@@ -134,7 +134,7 @@ function buildFailureCallback(provider: string, scene: Json, jobId: string): Jso
   return {
     name: scene.provider_operation_name || `operations/${jobId}`,
     done: true,
-    error: { message: "Synthetic pipeline failure" },
+    error: { message: "Intentional pipeline test failure" },
     type: "veo.operation.failed",
   };
 }

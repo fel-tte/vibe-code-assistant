@@ -382,7 +382,8 @@ class TestDatabaseSchema:
         db_session.flush()
 
         assert job.id is not None
-        assert job.created_at is not None or True  # may be None before commit on SQLite
+        # created_at may be None before flush on SQLite; verify field exists
+        assert hasattr(job, "created_at")
         assert hasattr(job, "output_url")
         assert hasattr(job, "final_video_url")
         assert hasattr(job, "error_message")

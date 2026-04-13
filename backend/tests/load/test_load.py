@@ -134,7 +134,8 @@ async def _create_one_job(
         if resp.status_code in (200, 201):
             try:
                 data = resp.json()
-                job_id = (data.get("data") or data).get("id") or (data.get("data") or data).get("job_id")
+                inner = data.get("data") or data
+                job_id = inner.get("id") or inner.get("job_id")
             except Exception:
                 job_id = None
             return JobResult(

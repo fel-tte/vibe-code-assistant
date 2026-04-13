@@ -56,6 +56,8 @@ echo ""
 # ---------------------------------------------------------------------------
 _run_level() {
   local concurrent=$1
+  local log_file="/tmp/stress_test_level_${concurrent}.log"
+
   echo "──────────────────────────────────────"
   echo "🚀  Testing with ${concurrent} concurrent jobs..."
 
@@ -64,7 +66,7 @@ _run_level() {
     --jobs "${JOBS_PER_LEVEL}" \
     --concurrent "${concurrent}" \
     --min-success-rate "${MIN_SUCCESS_RATE}" \
-    2>&1 | tail -20
+    2>&1 | tee "${log_file}" | tail -20
 
   local exit_code=${PIPESTATUS[0]}
 

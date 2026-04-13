@@ -31,7 +31,7 @@ concurrency:
 env:
   COMPOSE_DOCKER_CLI_BUILD: 1
   DOCKER_BUILDKIT: 1
-  PROVIDER_RELAY_SHARED_SECRET: replace-me
+  PROVIDER_RELAY_SHARED_SECRET: ${{ secrets.PROVIDER_RELAY_SHARED_SECRET || 'replace-me' }}
   CI: "true"
 
 jobs:
@@ -42,6 +42,8 @@ jobs:
     name: Backend integration tests (SQLite)
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: backend
@@ -97,6 +99,8 @@ jobs:
     name: Full pipeline E2E (${{ inputs.provider || 'runway' }} / ${{ inputs.delivery_mode || 'edge-callback' }})
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    permissions:
+      contents: read
     env:
       E2E_PROVIDER: ${{ inputs.provider || 'runway' }}
       E2E_DELIVERY_MODE: ${{ inputs.delivery_mode || 'edge-callback' }}
@@ -194,6 +198,8 @@ jobs:
     name: Load test (10 concurrent jobs)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
     if: ${{ inputs.run_load_test == true }}
     steps:
       - uses: actions/checkout@v4
