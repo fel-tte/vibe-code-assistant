@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from celery import Celery
+from celery.schedules import crontab  # noqa: F401 – kept for beat schedule definitions
 
 from app.core.config import settings
+from app.core.constants import CELERY_RESULT_EXPIRES_SECONDS
 
 
 celery_app = Celery(
@@ -34,24 +36,27 @@ celery_app.conf.update(
     task_send_sent_event=True,
     timezone="UTC",
     enable_utc=True,
+    # Expire results after 24 h to avoid Redis memory pressure
+    result_expires=CELERY_RESULT_EXPIRES_SECONDS,
+    # Task routing – keeps queues focused and avoids noisy-neighbour effects
+    task_routes={
+        "render.dispatch": {"queue": "dispatch"},
+        "render.poll": {"queue": "poll"},
+        "render.postprocess": {"queue": "postprocess"},
+        "render.recover_stuck": {"queue": "dispatch"},
+        "app.workers.template_*": {"queue": "templates"},
+    },
+    # Limit how many unacknowledged tasks a worker can hold at once
+    # (already set above via worker_prefetch_multiplier)
 )
 
 celery_app.conf.beat_schedule = {
     "recover-stuck-render-tasks": {
         "task": "render.recover_stuck",
         "schedule": 120.0,
-    }
+    },
+    "autopilot-evaluate-control-fabric-every-5-minutes": {
+        "task": "autopilot.evaluate_control_fabric",
+        "schedule": 300.0,
+    },
 }
-
-from celery.schedules import crontab
-
-try:
-    celery_app.conf.beat_schedule = {
-        **getattr(celery_app.conf, "beat_schedule", {}),
-        "autopilot-evaluate-control-fabric-every-5-minutes": {
-            "task": "autopilot.evaluate_control_fabric",
-            "schedule": 300.0,
-        },
-    }
-except Exception:
-    pass

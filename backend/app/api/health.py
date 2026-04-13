@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 
 from app.services.healthcheck_service import (
+    build_full_health_payload,
     check_database,
     check_object_storage,
     check_redis,
@@ -17,7 +19,7 @@ router = APIRouter(tags=["health"])
 @router.get("/healthz")
 async def healthz() -> dict:
     """
-    Aggregate health endpoint cho toàn bộ backend runtime.
+    Aggregate health endpoint for the entire backend runtime.
     """
     checks = [
         check_database(),
@@ -28,10 +30,21 @@ async def healthz() -> dict:
     return summarize_health(checks)
 
 
+@router.get("/healthz/detailed")
+async def healthz_detailed() -> JSONResponse:
+    """
+    Detailed health check that returns 200 when all subsystems are healthy
+    and 503 when any subsystem is degraded.
+    """
+    payload = build_full_health_payload()
+    status_code = 200 if payload.get("ok") else 503
+    return JSONResponse(content=payload, status_code=status_code)
+
+
 @router.get("/healthz/postgres")
 async def healthz_postgres() -> dict:
     """
-    Health check riêng cho Postgres.
+    Health check for Postgres.
     """
     return check_database()
 
@@ -39,7 +52,7 @@ async def healthz_postgres() -> dict:
 @router.get("/healthz/redis")
 async def healthz_redis() -> dict:
     """
-    Health check riêng cho Redis/Celery broker.
+    Health check for Redis/Celery broker.
     """
     return check_redis()
 
@@ -47,7 +60,7 @@ async def healthz_redis() -> dict:
 @router.get("/healthz/object-storage")
 async def healthz_object_storage() -> dict:
     """
-    Health check riêng cho MinIO/S3-compatible object storage.
+    Health check for MinIO/S3-compatible object storage.
     """
     return check_object_storage()
 
@@ -55,7 +68,7 @@ async def healthz_object_storage() -> dict:
 @router.get("/healthz/workers")
 async def healthz_workers() -> dict:
     """
-    Health check cơ bản cho Celery worker runtime.
+    Basic health check for the Celery worker runtime.
     """
     return check_worker_runtime()
 
@@ -63,7 +76,7 @@ async def healthz_workers() -> dict:
 @router.get("/healthz/fsm")
 async def healthz_fsm() -> dict:
     """
-    Expose FSM metrics + transition map để debug orchestration.
+    Expose FSM metrics + transition map for orchestration debugging.
     """
     return {
         "ok": True,
