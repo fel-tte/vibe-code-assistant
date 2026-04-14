@@ -72,8 +72,8 @@ def _build_graph(script: ScriptDirectory) -> Tuple[Dict[str, RevisionNode], Dict
     parents: Dict[str, List[str]] = {}
     children: Dict[str, List[str]] = defaultdict(list)
     revisions = list(script.walk_revisions(base='base', head='heads'))
-    head_ids = {rev.revision for rev in script.get_revisions('heads')}
-    base_ids = {rev.revision for rev in script.get_bases()}
+    head_ids = set(script.get_heads())
+    base_ids = set(script.get_bases())
     for rev in revisions:
         down_revs = _normalize_down_revisions(rev)
         nodes[rev.revision] = RevisionNode(
