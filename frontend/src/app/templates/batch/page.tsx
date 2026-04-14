@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import TemplateBatchRunner from "../@/src/components/templates/TemplateBatchRunner";
+import TemplateBatchRunner from "@/src/components/templates/TemplateBatchRunner";
 
 export default function TemplateBatchPage() {
   return (

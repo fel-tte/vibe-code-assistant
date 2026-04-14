@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { getProductionRuns } from "@/lib/api";
+import { getProductionRuns } from "@/src/lib/api";
 
 export default function DashboardPage() {
   const [items, setItems] = useState<any[]>([]);

@@ -1,8 +1,8 @@
 "use client";
 import React from "react";
-import TemplateDetail from "../@/src/components/templates/TemplateDetail";
-import TemplateGenerateForm from "../@/src/components/templates/TemplateGenerateForm";
-import TemplateAnalyticsPanel from "../@/src/components/templates/TemplateAnalyticsPanel";
+import TemplateDetail from "@/src/components/templates/TemplateDetail";
+import TemplateGenerateForm from "@/src/components/templates/TemplateGenerateForm";
+import TemplateAnalyticsPanel from "@/src/components/templates/TemplateAnalyticsPanel";
 
 export default function TemplateDetailPage() {
   return (

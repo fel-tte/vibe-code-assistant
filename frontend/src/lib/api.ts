@@ -125,6 +125,7 @@ export interface RenderJob {
   updated_at?: string | null;
   timeline?: FinalPreviewTimeline | null;
   final_timeline?: FinalPreviewTimeline | null;
+  subtitle_segments?: SubtitleSegment[] | null;
   error_message?: string | null;
   scenes: RenderJobScene[];
 }
@@ -156,6 +157,20 @@ const API_BASE_URL =
 const RAW_BASE_URL = API_BASE_URL.endsWith("/api/v1")
   ? API_BASE_URL.slice(0, -7)
   : API_BASE_URL;
+
+// Backward-compat helpers used by older API wrappers in this file.
+const API_BASE = RAW_BASE_URL;
+
+async function handle<T>(res: Response): Promise<T> {
+  if (!res.ok) {
+    throw new Error(await parseErrorResponse(res));
+  }
+  return (await res.json()) as T;
+}
+
+async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  return request<T>(path, init);
+}
 
 function buildUrl(path: string): string {
   if (/^https?:\/\//.test(path)) return path;
@@ -373,7 +388,7 @@ export async function createRenderJob(input: {
 
 export async function getRenderJob(jobId: string): Promise<RenderJob> {
   const data = await request<any>(`/render/jobs/${jobId}`, { method: "GET" });
-  return { id: data.id, job_id: data.id || jobId, project_id: data.project_id, status: data.status, provider: data.provider, aspect_ratio: data.aspect_ratio, style_preset: data.style_preset, subtitle_mode: data.subtitle_mode, planned_scene_count: data.planned_scene_count ?? 0, completed_scene_count: Array.isArray(data.scenes) ? data.scenes.filter((scene: any) => scene.status === "succeeded").length : 0, failed_scene_count: Array.isArray(data.scenes) ? data.scenes.filter((scene: any) => scene.status === "failed").length : 0, scenes: Array.isArray(data.scenes) ? data.scenes.map((scene: any) => ({ id: scene.id, job_id: scene.job_id, scene_index: scene.scene_index, title: scene.title || `Scene ${scene.scene_index}`, status: scene.status, provider_task_id: scene.provider_task_id, provider_operation_name: scene.provider_operation_name, output_url: scene.output_url, output_path: scene.output_path, error_message: scene.error_message, completed_at: scene.completed_at })) : [], started_at: data.started_at, completed_at: data.completed_at, created_at: data.created_at, updated_at: data.updated_at, final_video_url: data.output_url, output_url: data.output_url, output_path: data.output_path, storage_key: data.storage_key, thumbnail_url: data.thumbnail_url, timeline: data.final_timeline, final_timeline: data.final_timeline, error_message: data.error_message };
+  return { id: data.id, job_id: data.id || jobId, project_id: data.project_id, status: data.status, provider: data.provider, aspect_ratio: data.aspect_ratio, style_preset: data.style_preset, subtitle_mode: data.subtitle_mode, planned_scene_count: data.planned_scene_count ?? 0, completed_scene_count: Array.isArray(data.scenes) ? data.scenes.filter((scene: any) => scene.status === "succeeded").length : 0, failed_scene_count: Array.isArray(data.scenes) ? data.scenes.filter((scene: any) => scene.status === "failed").length : 0, scenes: Array.isArray(data.scenes) ? data.scenes.map((scene: any) => ({ id: scene.id, job_id: scene.job_id, scene_index: scene.scene_index, title: scene.title || `Scene ${scene.scene_index}`, status: scene.status, provider_task_id: scene.provider_task_id, provider_operation_name: scene.provider_operation_name, output_url: scene.output_url, output_path: scene.output_path, error_message: scene.error_message, completed_at: scene.completed_at })) : [], started_at: data.started_at, completed_at: data.completed_at, created_at: data.created_at, updated_at: data.updated_at, final_video_url: data.output_url, output_url: data.output_url, output_path: data.output_path, storage_key: data.storage_key, thumbnail_url: data.thumbnail_url, timeline: data.final_timeline, final_timeline: data.final_timeline, subtitle_segments: Array.isArray(data.subtitle_segments) ? data.subtitle_segments : null, error_message: data.error_message };
 }
 
 export async function getHealth(): Promise<HealthCheckPayload> {
@@ -601,37 +616,37 @@ export interface AutopilotDashboardResponse {
 }
 
 export async function getObservabilityStatus(): Promise<ObservabilityStatusResponse> {
-  return fetchJson<ObservabilityStatusResponse>(`/api/v1/observability/status`);
+  return request<ObservabilityStatusResponse>(`/observability/status`, { method: "GET" });
 }
 
 export async function getAutopilotDashboard(): Promise<AutopilotDashboardResponse> {
-  return fetchJson<AutopilotDashboardResponse>(`/api/v1/observability/autopilot-dashboard`);
+  return request<AutopilotDashboardResponse>(`/observability/autopilot-dashboard`, { method: "GET" });
 }
 
 export async function getKillSwitch(): Promise<KillSwitchResponse> {
-  return fetchJson<KillSwitchResponse>(`/api/v1/observability/kill-switch`);
+  return request<KillSwitchResponse>(`/observability/kill-switch`, { method: "GET" });
 }
 
 export async function updateKillSwitch(payload: { actor: string; enabled: boolean; reason?: string | null }): Promise<KillSwitchResponse> {
-  return fetchJson<KillSwitchResponse>(`/api/v1/observability/kill-switch`, {
+  return request<KillSwitchResponse>(`/observability/kill-switch`, {
     method: "POST",
     body: JSON.stringify(payload),
   });
 }
 
 export async function listNotificationEndpoints(): Promise<NotificationEndpointResponse[]> {
-  return fetchJson<NotificationEndpointResponse[]>(`/api/v1/observability/notification-endpoints`);
+  return request<NotificationEndpointResponse[]>(`/observability/notification-endpoints`, { method: "GET" });
 }
 
 export async function upsertNotificationEndpoint(payload: { actor: string; name: string; channel_type: string; target: string; event_filter?: string; enabled?: boolean; secret?: string | null }): Promise<NotificationEndpointResponse> {
-  return fetchJson<NotificationEndpointResponse>(`/api/v1/observability/notification-endpoints`, {
+  return request<NotificationEndpointResponse>(`/observability/notification-endpoints`, {
     method: "POST",
     body: JSON.stringify(payload),
   });
 }
 
 export async function listNotificationDeliveries(limit = 50): Promise<NotificationDeliveryLogResponse[]> {
-  return fetchJson<NotificationDeliveryLogResponse[]>(`/api/v1/observability/notification-deliveries?limit=${limit}`);
+  return request<NotificationDeliveryLogResponse[]>(`/observability/notification-deliveries?limit=${limit}`, { method: "GET" });
 }
 
 

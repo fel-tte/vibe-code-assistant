@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import {
   getProject,
   getProjectRenderStatus,
@@ -14,8 +15,9 @@ import {
   createVeoBatchRun,
 } from "@/src/lib/api";
 
-export default function ProjectWorkspacePage({ params }: { params: { id: string } }) {
-  const projectId = params.id;
+export default function ProjectWorkspacePage() {
+  const params = useParams<{ id: string }>();
+  const projectId = Array.isArray(params?.id) ? params.id[0] : (params?.id ?? "");
   const [project, setProject] = useState<any>(null);
   const [status, setStatus] = useState<any>(null);
   const [events, setEvents] = useState<any[]>([]);

@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { activateStrategyMode, createStrategySignal, getStrategyBusinessOutcomes, getStrategyDirectives, getStrategyPortfolio, getStrategySlaRisk, getStrategyState } from "@/lib/api";
-import StrategyStateCard from "@/components/strategy/StrategyStateCard";
-import PortfolioAllocationTable from "@/components/strategy/PortfolioAllocationTable";
-import DirectivePanel from "@/components/strategy/DirectivePanel";
-import SlaRiskHeatmap from "@/components/strategy/SlaRiskHeatmap";
-import CampaignTimeline from "@/components/strategy/CampaignTimeline";
+import { activateStrategyMode, createStrategySignal, getStrategyBusinessOutcomes, getStrategyDirectives, getStrategyPortfolio, getStrategySlaRisk, getStrategyState } from "@/src/lib/api";
+import StrategyStateCard from "@/src/components/strategy/StrategyStateCard";
+import PortfolioAllocationTable from "@/src/components/strategy/PortfolioAllocationTable";
+import DirectivePanel from "@/src/components/strategy/DirectivePanel";
+import SlaRiskHeatmap from "@/src/components/strategy/SlaRiskHeatmap";
+import CampaignTimeline from "@/src/components/strategy/CampaignTimeline";
 
 export default function StrategyPage() {
   const [state, setState] = useState<any | null>(null);

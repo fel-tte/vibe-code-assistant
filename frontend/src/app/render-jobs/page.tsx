@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import DashboardShell from "@/src/components/DashboardShell";
 import IncidentDrawer from "@/src/components/IncidentDrawer";
@@ -55,6 +55,8 @@ import {
   type RenderJobListItem,
 } from "@/src/lib/api";
 
+export const dynamic = "force-dynamic";
+
 const HEALTH_OPTIONS = ["all", "healthy", "degraded", "stalled", "failed", "completed", "queued"] as const;
 const SEGMENT_OPTIONS = [
   { key: "active", label: "Active" },
@@ -99,6 +101,14 @@ function SegmentButton({ active, label, onClick }: { active: boolean; label: str
 }
 
 export default function RenderJobsDashboardPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-neutral-950 text-white p-8">Loading dashboard...</main>}>
+      <RenderJobsDashboardPageContent />
+    </Suspense>
+  );
+}
+
+function RenderJobsDashboardPageContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();

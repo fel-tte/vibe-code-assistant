@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import TemplateExtractionReview from "../../@/src/components/templates/TemplateExtractionReview";
+import TemplateExtractionReview from "@/src/components/templates/TemplateExtractionReview";
 
 export default function ExtractionDetailPage() {
   return (

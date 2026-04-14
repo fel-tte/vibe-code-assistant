@@ -257,7 +257,7 @@ test("full local chain: create job -> submit -> callback -> status api -> fronte
   }
 
   await page.goto(`${FRONTEND_BASE_URL}/render-jobs/${jobId}`, { waitUntil: "networkidle" });
-  await expect(page.getByText(new RegExp(`Job\s+${jobId}`))).toBeVisible();
+  await expect(page.getByText(new RegExp(`Job\\s+${jobId}`))).toBeVisible();
   await expect(page.getByTestId("render-job-final-video")).toBeVisible();
   await expect(page.getByTestId("render-job-final-video-url")).toContainText(finalAssetUrl);
   await expect(page.getByTestId("render-job-final-timeline")).toContainText(/timeline entries/i);
@@ -287,7 +287,7 @@ test("dashboard incident drawer opens for failed provider callback", async ({ pa
   );
 
   await page.goto(`${FRONTEND_BASE_URL}/render-jobs`, { waitUntil: "networkidle" });
-  await expect(page.getByText(/Saved incident views/i)).toBeVisible();
+  await expect(page.getByText('Saved incident views', { exact: true })).toBeVisible();
   const incidentCard = page.locator('[data-testid="incident-card"]').filter({ hasText: jobId }).first();
   await expect(incidentCard).toBeVisible();
   await incidentCard.click();
