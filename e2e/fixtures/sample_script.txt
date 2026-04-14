@@ -1,0 +1,24 @@
+SCENE 1 - TITLE: Opening Shot
+A sweeping aerial view of a vibrant city skyline at golden hour. Warm sunlight catches the glass towers, casting long dramatic shadows across the streets below. Camera slowly descends toward a busy intersection.
+DURATION: 5
+PROVIDER_MODEL: gen4_turbo
+
+SCENE 2 - TITLE: Street Level Reveal
+Ground-level tracking shot following pedestrians through a bustling market. Colorful stalls, ambient chatter, and the smell of fresh produce fill the frame. The camera weaves through crowds with smooth, cinematic motion.
+DURATION: 5
+PROVIDER_MODEL: gen4_turbo
+
+SCENE 3 - TITLE: Character Introduction
+A close-up of a determined protagonist looking up at the city skyline. Wind gently moves their hair. Resolve etched into their expression. They take a deep breath and step forward.
+DURATION: 4
+PROVIDER_MODEL: gen4_turbo
+
+SCENE 4 - TITLE: Montage Sequence
+Quick cuts between the protagonist walking purposefully through different city environments: subway tunnels, rooftops at night, morning parks. Each scene builds tension and momentum.
+DURATION: 5
+PROVIDER_MODEL: gen4_turbo
+
+SCENE 5 - TITLE: Climactic Arrival
+The protagonist arrives at a towering glass building. The camera pulls back to reveal the scale of the challenge ahead. Epic orchestral score swells. Title card fades in.
+DURATION: 6
+PROVIDER_MODEL: gen4_turbo
