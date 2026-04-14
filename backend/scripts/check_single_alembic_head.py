@@ -208,16 +208,14 @@ def main() -> int:
             if result.ok:
                 print('::notice title=Alembic lineage validator::Graph validation passed')
             else:
-                safe_msg = result.message.replace('
-', ' ')
+                safe_msg = result.message.replace('\n', ' ')
                 print(f'::error title=Alembic lineage validator::{safe_msg}')
         return 0 if result.ok else 1
     except Exception as exc:
         _stderr('Alembic lineage validator crashed.')
         _stderr(f'{type(exc).__name__}: {exc}')
         if os.getenv('GITHUB_ACTIONS') == 'true':
-            safe_msg = f'{type(exc).__name__}: {exc}'.replace('
-', ' ')
+            safe_msg = f'{type(exc).__name__}: {exc}'.replace('\n', ' ')
             print(f'::error title=Alembic lineage validator crash::{safe_msg}')
         return 2
 
