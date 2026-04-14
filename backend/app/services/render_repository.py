@@ -997,7 +997,7 @@ def build_render_job_response(db: Session, job: RenderJob, *, include_scenes: bo
             'provider_task_id': s.provider_task_id, 'provider_operation_name': s.provider_operation_name,
             'output_url': s.storage_signed_url or s.output_video_url, 'output_path': s.local_video_path,
             'error_message': s.error_message, 'completed_at': s.finished_at
-        }) for s in (job.scenes if include_scenes else [])]
+        })() for s in (job.scenes if include_scenes else [])]
     })()
 
 
