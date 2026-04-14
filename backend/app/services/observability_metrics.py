@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -20,7 +20,7 @@ from app.services.kill_switch import get_or_create_global_kill_switch
 
 
 def collect_status_snapshot(db: Session) -> ObservabilityStatusResponse:
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     metrics: list[MetricSample] = []
 
     job_rows = db.query(RenderJob.status, func.count(RenderJob.id)).group_by(RenderJob.status).all()

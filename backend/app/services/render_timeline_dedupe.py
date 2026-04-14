@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
@@ -23,7 +23,7 @@ def get_latest_timeline_event_for_scene(db: Session, *, scene_task_id: str, sour
 
 
 def should_append_poll_transition(db: Session, *, scene: RenderSceneTask, next_event_type: str, next_status: str | None, next_provider_status_raw: str | None, occurred_at: datetime | None = None) -> tuple[bool, str]:
-    now = occurred_at or datetime.utcnow()
+    now = occurred_at or datetime.now(timezone.utc).replace(tzinfo=None)
     latest = get_latest_timeline_event_for_scene(db, scene_task_id=scene.id, source='provider_poll')
     if latest is None:
         return True, 'no_previous_poll_event'
@@ -40,7 +40,7 @@ def should_append_poll_transition(db: Session, *, scene: RenderSceneTask, next_e
 
 
 def should_append_processing_heartbeat(db: Session, *, scene: RenderSceneTask, occurred_at: datetime | None = None) -> tuple[bool, str]:
-    now = occurred_at or datetime.utcnow()
+    now = occurred_at or datetime.now(timezone.utc).replace(tzinfo=None)
     latest = get_latest_timeline_event_for_scene(db, scene_task_id=scene.id, source='provider_poll', event_type='scene_processing_heartbeat')
     if latest is None:
         return True, 'no_previous_heartbeat'
@@ -51,7 +51,7 @@ def should_append_processing_heartbeat(db: Session, *, scene: RenderSceneTask, o
 
 
 def detect_stalled_scene(scene: RenderSceneTask, *, now: datetime | None = None) -> tuple[bool, str | None, dict]:
-    now = now or datetime.utcnow()
+    now = now or datetime.now(timezone.utc).replace(tzinfo=None)
     if scene.status != 'processing':
         return False, None, {}
     if scene.last_callback_at is not None:

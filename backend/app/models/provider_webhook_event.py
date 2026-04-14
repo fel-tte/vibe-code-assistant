@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import Boolean, DateTime, String, Text
@@ -28,5 +28,5 @@ class ProviderWebhookEvent(Base):
     payload_json: Mapped[str] = mapped_column(Text, nullable=False)
     normalized_payload_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
-    received_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    received_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     processed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)

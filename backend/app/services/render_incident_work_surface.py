@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from app.models.render_incident_state import RenderIncidentState
@@ -33,7 +33,7 @@ def _segment_filter(q, segment: str, assignee: str | None = None):
 
 def get_incident_segment_metrics(db: Session, *, provider: str | None = None, show_muted: bool = False, assignee: str | None = None) -> dict:
     items = []
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     for segment in SEGMENTS:
         q = _segment_filter(_base_query(db, provider=provider, show_muted=show_muted), segment, assignee=assignee)
         rows = q.all()

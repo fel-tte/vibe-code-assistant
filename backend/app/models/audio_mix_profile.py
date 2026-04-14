@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, DateTime, Float, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -21,4 +21,4 @@ class AudioMixProfile(Base):
     fade_in_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=500)
     fade_out_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=800)
     enable_ducking: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False)

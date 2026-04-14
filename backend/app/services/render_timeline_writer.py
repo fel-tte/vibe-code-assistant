@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -60,7 +60,7 @@ def append_timeline_event(
         processed=processed,
         event_idempotency_key=event_idempotency_key,
         payload_json=_dump(payload),
-        occurred_at=occurred_at or datetime.utcnow(),
+        occurred_at=occurred_at or datetime.now(timezone.utc).replace(tzinfo=None),
     )
     db.add(event)
     db.commit()

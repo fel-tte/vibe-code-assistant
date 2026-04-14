@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -129,7 +129,7 @@ def get_productivity_trend_windows(db: Session, *, actor: str, windows: list[int
             'operator_totals': board.get('operators', []),
         })
 
-    since = datetime.utcnow() - timedelta(days=max_days)
+    since = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=max_days)
     actions = db.query(RenderIncidentAction).filter(RenderIncidentAction.created_at >= since).all()
     actor_to_team = {p.actor_id: p.team_id for p in db.query(RenderOperatorAccessProfile).all()}
     daily = defaultdict(lambda: {'resolved_count': 0, 'assigned_count': 0, 'acknowledged_count': 0, 'muted_count': 0})

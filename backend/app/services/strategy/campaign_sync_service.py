@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Iterable, List
 
 from app.models import CampaignWindow
@@ -19,7 +19,7 @@ class CampaignSyncService:
         return synced
 
     def active_windows(self, now: datetime | None = None) -> List[CampaignWindow]:
-        now = now or datetime.utcnow()
+        now = now or datetime.now(timezone.utc).replace(tzinfo=None)
         return [
             window
             for window in self.state.campaign_windows.values()

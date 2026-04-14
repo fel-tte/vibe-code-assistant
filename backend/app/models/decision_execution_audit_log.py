@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import DateTime, String, Text
@@ -21,4 +21,4 @@ class DecisionExecutionAuditLog(Base):
     result_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     policy_version: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     recommendation_key: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False, index=True)

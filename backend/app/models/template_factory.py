@@ -1,6 +1,6 @@
 from __future__ import annotations
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import String, Text, Boolean, Integer, DateTime, ForeignKey, Numeric
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
@@ -22,8 +22,8 @@ class TemplatePack(Base):
     usage_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     metadata_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 class TemplateVersion(Base):
     __tablename__ = "template_versions"
@@ -33,7 +33,7 @@ class TemplateVersion(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     change_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     config_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 class StyleTemplate(Base):
     __tablename__ = "style_templates"
@@ -47,8 +47,8 @@ class StyleTemplate(Base):
     default_duration_sec: Mapped[float] = mapped_column(Numeric(10,2), nullable=False, default=5.0)
     voice_profile_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     thumbnail_rules_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 class NarrativeTemplate(Base):
     __tablename__ = "narrative_templates"
@@ -59,8 +59,8 @@ class NarrativeTemplate(Base):
     structure_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     slot_schema_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     cta_rules_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 class SceneBlueprint(Base):
     __tablename__ = "scene_blueprints"
@@ -70,8 +70,8 @@ class SceneBlueprint(Base):
     scene_count: Mapped[int] = mapped_column(Integer, nullable=False)
     blueprint_json: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
     timeline_rules_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 class CharacterPack(Base):
     __tablename__ = "character_packs"
@@ -84,8 +84,8 @@ class CharacterPack(Base):
     pose_variants_json: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
     expression_variants_json: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
     usage_rules_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 class ThumbnailTemplate(Base):
     __tablename__ = "thumbnail_templates"
@@ -95,8 +95,8 @@ class ThumbnailTemplate(Base):
     layout_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     headline_rules_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     crop_rules_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 class PublishingTemplate(Base):
     __tablename__ = "publishing_templates"
@@ -109,8 +109,8 @@ class PublishingTemplate(Base):
     description_pattern: Mapped[str | None] = mapped_column(Text, nullable=True)
     hashtags_json: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
     upload_defaults_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 class TemplateComponent(Base):
     __tablename__ = "template_components"
@@ -120,7 +120,7 @@ class TemplateComponent(Base):
     component_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     component_role: Mapped[str | None] = mapped_column(Text, nullable=True)
     metadata_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 class TemplateExtraction(Base):
     __tablename__ = "template_extractions"
@@ -131,8 +131,8 @@ class TemplateExtraction(Base):
     extraction_report_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     score_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     error_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 class TemplateUsageRun(Base):
     __tablename__ = "template_usage_runs"
@@ -144,15 +144,15 @@ class TemplateUsageRun(Base):
     input_slots_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     status: Mapped[str] = mapped_column(Text, nullable=False, default="queued")
     result_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 class TemplatePerformanceSnapshot(Base):
     __tablename__ = "template_performance_snapshots"
     id: Mapped[uuid.UUID] = uuid_col()
     template_pack_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("template_packs.id", ondelete="CASCADE"), nullable=False)
     snapshot_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    captured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    captured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 class TemplateCloneJob(Base):
     __tablename__ = "template_clone_jobs"
@@ -163,5 +163,5 @@ class TemplateCloneJob(Base):
     status: Mapped[str] = mapped_column(Text, nullable=False, default="queued")
     result_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     error_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -20,7 +20,7 @@ def _session():
 
 def test_decision_engine_recommends_queue_pressure_and_provider_surge():
     db = _session()
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
 
     for idx in range(4):
         db.add(
@@ -79,7 +79,7 @@ def test_decision_engine_recommends_queue_pressure_and_provider_surge():
 
 def test_decision_engine_can_execute_incident_ack_action():
     db = _session()
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
 
     db.add(
         RenderIncidentState(

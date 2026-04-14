@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Sequence
 
 from sqlalchemy import func, or_
@@ -322,7 +322,7 @@ def mark_scene_submitted(
     scene.provider_status_raw = provider_status_raw
     scene.provider_model = provider_model
     scene.provider_callback_url = provider_callback_url
-    scene.submitted_at = scene.submitted_at or datetime.utcnow()
+    scene.submitted_at = scene.submitted_at or datetime.now(timezone.utc).replace(tzinfo=None)
     scene.response_payload_json = _json_dumps(raw_response or {})
     db.commit()
 
@@ -378,9 +378,9 @@ def transition_scene_to_processing(
 
     scene.status = "processing"
     scene.provider_status_raw = provider_status_raw or scene.provider_status_raw
-    scene.started_at = scene.started_at or datetime.utcnow()
+    scene.started_at = scene.started_at or datetime.now(timezone.utc).replace(tzinfo=None)
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     if source == "callback":
         scene.last_callback_at = now
     else:
@@ -451,9 +451,9 @@ def transition_scene_to_succeeded(
     scene.output_video_url = output_video_url
     scene.output_thumbnail_url = output_thumbnail_url
     scene.local_video_path = local_video_path
-    scene.finished_at = datetime.utcnow()
+    scene.finished_at = datetime.now(timezone.utc).replace(tzinfo=None)
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     if source == "callback":
         scene.last_callback_at = now
     else:
@@ -528,9 +528,9 @@ def transition_scene_to_failed(
     scene.error_message = error_message
     scene.failure_code = failure_code
     scene.failure_category = failure_category
-    scene.finished_at = datetime.utcnow()
+    scene.finished_at = datetime.now(timezone.utc).replace(tzinfo=None)
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     if source == "callback":
         scene.last_callback_at = now
     else:
@@ -779,7 +779,7 @@ def create_webhook_event(
         headers_json=_json_dumps(headers_json or {}),
         payload_json=_json_dumps(payload_json),
         normalized_payload_json=_json_dumps(normalized_payload_json or {}),
-        received_at=datetime.utcnow(),
+        received_at=datetime.now(timezone.utc).replace(tzinfo=None),
     )
     db.add(event)
     db.commit()
@@ -789,7 +789,7 @@ def create_webhook_event(
 
 def mark_webhook_event_processed(db: Session, event: ProviderWebhookEvent) -> None:
     event.processed = True
-    event.processed_at = datetime.utcnow()
+    event.processed_at = datetime.now(timezone.utc).replace(tzinfo=None)
     db.commit()
 
 
@@ -915,7 +915,7 @@ def find_scene_tasks_exceeding_retry_budget(
 
 def increment_scene_retry_count(db: Session, scene: RenderSceneTask) -> None:
     scene.retry_count = (scene.retry_count or 0) + 1
-    scene.last_polled_at = datetime.utcnow()
+    scene.last_polled_at = datetime.now(timezone.utc).replace(tzinfo=None)
     db.commit()
 
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -27,7 +27,7 @@ def _session():
 
 def test_autopilot_executes_safe_decisions_and_records_state():
     db = _session()
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
 
     for idx in range(4):
         db.add(
@@ -89,14 +89,14 @@ def test_autopilot_executes_safe_decisions_and_records_state():
 
 def test_autopilot_release_unblock_policy():
     db = _session()
-    old_now = datetime.utcnow() - timedelta(hours=2)
+    old_now = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(hours=2)
     gate = get_or_create_release_gate(db)
     gate.blocked = True
     gate.reason = "Blocked earlier"
     gate.updated_at = old_now
     db.commit()
 
-    result = run_autopilot_cycle(db, now=datetime.utcnow())
+    result = run_autopilot_cycle(db, now=datetime.now(timezone.utc).replace(tzinfo=None))
     db.refresh(gate)
 
     assert gate.blocked is False
@@ -113,12 +113,12 @@ def test_provider_override_expiry_policy_rolls_back_expired_override():
             active=True,
             reason="temporary failover",
             updated_by="test",
-            expires_at=datetime.utcnow() - timedelta(minutes=1),
+            expires_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(minutes=1),
         )
     )
     db.commit()
 
-    actions = run_provider_override_expiry_policy(db, actor="autopilot-bot", now=datetime.utcnow())
+    actions = run_provider_override_expiry_policy(db, actor="autopilot-bot", now=datetime.now(timezone.utc).replace(tzinfo=None))
     row = db.query(ProviderRoutingOverride).filter_by(source_provider="runway").first()
 
     assert actions

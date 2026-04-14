@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import DateTime, String, Text
@@ -21,4 +21,4 @@ class RenderIncidentAction(Base):
     actor: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     payload_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False, index=True)

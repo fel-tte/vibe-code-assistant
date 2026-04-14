@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -16,7 +16,7 @@ HEALTH_EVENTS = {
 
 
 def _transition_summary(db: Session, window: timedelta, label: str) -> dict:
-    since = datetime.utcnow() - window
+    since = datetime.now(timezone.utc).replace(tzinfo=None) - window
     rows = db.query(RenderTimelineEvent).filter(RenderTimelineEvent.event_type.in_(list(HEALTH_EVENTS)), RenderTimelineEvent.occurred_at >= since).all()
     counts = {'degraded':0,'stalled':0,'recovered':0,'failed':0,'completed':0}
     for r in rows:

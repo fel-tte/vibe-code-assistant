@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -27,7 +27,7 @@ def build_render_job_health_summary(db: Session, job: RenderJob) -> dict:
     succeeded_scenes = [s for s in scenes if s.status == 'succeeded']
     failed_scenes = [s for s in scenes if s.status in {'failed', 'canceled'}]
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     stalled_scene_ids = []
     degraded_scene_ids = []
     reason = None
@@ -95,12 +95,12 @@ def refresh_render_job_health_snapshot(db: Session, job: RenderJob) -> dict:
     last_event_at = summary['last_event_at']
     job.last_event_at = datetime.fromisoformat(last_event_at) if last_event_at else job.last_event_at
     if summary['status'] != previous_status or summary['reason'] != previous_reason:
-        job.last_health_transition_at = datetime.utcnow()
+        job.last_health_transition_at = datetime.now(timezone.utc).replace(tzinfo=None)
     db.commit()
     if summary['status'] != previous_status:
         event = append_timeline_event(
             db, job_id=job.id, scene_task_id=None, scene_index=None, source='system', event_type=f"job_health_{summary['status']}",
-            occurred_at=datetime.utcnow(), status=job.status, provider=job.provider, payload={'previous_status': previous_status, 'current_status': summary['status'], 'previous_reason': previous_reason, 'current_reason': summary['reason']}
+            occurred_at=datetime.now(timezone.utc).replace(tzinfo=None), status=job.status, provider=job.provider, payload={'previous_status': previous_status, 'current_status': summary['status'], 'previous_reason': previous_reason, 'current_reason': summary['reason']}
         )
         project_timeline_event_to_incident_state(db, event)
     return summary

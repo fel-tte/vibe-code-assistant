@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -41,7 +41,7 @@ def append_poll_timeline_event_if_needed(
     )
     stalled, reason, meta = detect_stalled_scene(scene, now=occurred_at)
     if stalled and scene.last_stalled_at is None:
-        scene.last_stalled_at = occurred_at or datetime.utcnow()
+        scene.last_stalled_at = occurred_at or datetime.now(timezone.utc).replace(tzinfo=None)
         db.commit()
         append_scene_timeline_event(
             db, scene=scene, source='provider_poll', event_type='scene_processing_stalled', occurred_at=occurred_at, status=status, provider_status_raw=provider_status_raw, payload={'stalled_reason': reason, **meta}

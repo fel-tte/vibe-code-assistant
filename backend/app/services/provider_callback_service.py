@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
@@ -104,7 +104,7 @@ def ingest_provider_callback(
         )
 
     event.processed = True
-    event.processed_at = datetime.utcnow()
+    event.processed_at = datetime.now(timezone.utc).replace(tzinfo=None)
     db.commit()
 
     return {"duplicate": False, "event_id": event.id}

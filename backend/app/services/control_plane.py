@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -106,7 +106,7 @@ def get_provider_override(db: Session, *, source_provider: str) -> ProviderRouti
         ProviderRoutingOverride.source_provider == source_provider,
         ProviderRoutingOverride.active.is_(True),
     ).first()
-    if row and row.expires_at and row.expires_at <= datetime.utcnow():
+    if row and row.expires_at and row.expires_at <= datetime.now(timezone.utc).replace(tzinfo=None):
         row.active = False
         db.commit()
         return None

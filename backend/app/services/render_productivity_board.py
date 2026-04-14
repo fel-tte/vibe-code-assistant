@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 
@@ -24,7 +24,7 @@ def get_productivity_board(db: Session, *, actor: str, days: int = 7) -> dict:
     requester = get_or_create_access_profile(db, actor=actor)
     profiles = list_access_profiles(db, actor=actor, team_only=False)
     profile_by_actor = {p["actor_id"]: p for p in profiles}
-    since = datetime.utcnow() - timedelta(days=days)
+    since = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days)
 
     rows = db.query(RenderIncidentAction).filter(RenderIncidentAction.created_at >= since).all()
     op = defaultdict(lambda: {

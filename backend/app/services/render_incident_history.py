@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -214,7 +214,7 @@ def update_incident_note(db: Session, *, incident_key: str, actor: str, note: st
         return None
     normalized = (note or "").strip() or None
     state.note = normalized
-    state.updated_at = datetime.utcnow()
+    state.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     db.add(
         RenderIncidentAction(
             id=f"ria_{uuid.uuid4().hex[:24]}",

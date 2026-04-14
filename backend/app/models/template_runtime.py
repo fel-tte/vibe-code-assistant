@@ -1,6 +1,6 @@
 from __future__ import annotations
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Text, Integer, DateTime, ForeignKey, Numeric
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
@@ -23,7 +23,7 @@ class TemplateScore(Base):
     scoring_window: Mapped[str | None] = mapped_column(Text, nullable=True)
     weight_profile: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     score_details_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    scored_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    scored_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 class TemplateMemory(Base):
     __tablename__ = "template_memory"
@@ -40,8 +40,8 @@ class TemplateMemory(Base):
     dominant_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     retired_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     stats_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 class TemplateSelectionDecision(Base):
     __tablename__ = "template_selection_decisions"
@@ -54,7 +54,7 @@ class TemplateSelectionDecision(Base):
     reason_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     alternatives_json: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
     outcome_label: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 
 
@@ -66,7 +66,7 @@ class TemplateEvolutionEvent(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     template_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     event_type: Mapped[str] = mapped_column(Text, nullable=False)
-    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     old_version: Mapped[str | None] = mapped_column(Text, nullable=True)
     new_version: Mapped[str | None] = mapped_column(Text, nullable=True)
     performance_delta: Mapped[float | None] = mapped_column(Numeric(5,2), nullable=True)
@@ -84,7 +84,7 @@ class TemplateExtractedDraft(Base):
     draft_content_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     draft_version: Mapped[str] = mapped_column(Text, nullable=False, default="v1")
     is_candidate: Mapped[bool] = mapped_column(nullable=False, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     extracted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
@@ -98,7 +98,7 @@ class TemplateExtractionJob(Base):
     auto_publish: Mapped[bool] = mapped_column(nullable=False, default=False)
     extracted_draft_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("template_extracted_drafts.id", ondelete="SET NULL"), nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
@@ -115,7 +115,7 @@ class TemplateCompetitionRecord(Base):
     tie_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     win_rate: Mapped[float] = mapped_column(Numeric(5,3), nullable=False, default=0.0)
     last_compared_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 
 class TemplateLearningStat(Base):
@@ -130,7 +130,7 @@ class TemplateLearningStat(Base):
     avg_render_quality: Mapped[float] = mapped_column(Numeric(5,3), nullable=False, default=0.0)
     avg_user_satisfaction: Mapped[float] = mapped_column(Numeric(5,3), nullable=False, default=0.0)
     recommendation_score: Mapped[float] = mapped_column(Numeric(5,3), nullable=False, default=0.0)
-    last_updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    last_updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 
 class TemplateReusePreview(Base):
@@ -143,5 +143,5 @@ class TemplateReusePreview(Base):
     preview_content_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     fit_score: Mapped[float] = mapped_column(Numeric(5,3), nullable=False, default=0.0)
     adaptation_hints_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     valid_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

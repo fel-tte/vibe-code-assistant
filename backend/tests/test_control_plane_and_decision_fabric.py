@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -88,7 +88,7 @@ def test_decision_engine_persists_provider_override_and_release_gate():
 
 def test_release_guardrail_recommendation_and_incident_action_audit():
     db = _session()
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
 
     db.add(
         RenderJob(

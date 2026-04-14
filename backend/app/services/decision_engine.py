@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from collections import Counter
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from sqlalchemy.orm import Session
@@ -35,7 +35,7 @@ def load_decision_policy() -> dict:
 
 
 def _build_snapshot(db: Session, *, now: datetime | None = None) -> DecisionContextSnapshot:
-    now = now or datetime.utcnow()
+    now = now or datetime.now(timezone.utc).replace(tzinfo=None)
     cutoff = now - timedelta(hours=24)
 
     queued_jobs = db.query(RenderJob).filter(RenderJob.status == "queued").count()
@@ -79,7 +79,7 @@ def _build_snapshot(db: Session, *, now: datetime | None = None) -> DecisionCont
 
 
 def evaluate_decision_policy(db: Session, *, now: datetime | None = None) -> DecisionEvaluationResponse:
-    now = now or datetime.utcnow()
+    now = now or datetime.now(timezone.utc).replace(tzinfo=None)
     policy = load_decision_policy()
     snapshot = _build_snapshot(db, now=now)
     rules = policy["rules"]
