@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+import logging
+import traceback
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from app.db.session import get_db
 from app.schemas.render_job_status import RenderJobStatusResponse
@@ -59,6 +64,7 @@ async def get_render_job(
     except HTTPException:
         raise
     except Exception as exc:
+        logger.error("get_render_job 500 – %s\n%s", exc, traceback.format_exc())
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch render job status",
