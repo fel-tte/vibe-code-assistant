@@ -1,4 +1,4 @@
-.PHONY: bootstrap up down logs backend-logs frontend-logs health test-backend tree smoke-sign-runway smoke-sign-kling smoke-sign-veo e2e-up e2e-test e2e-local e2e-down ci-e2e ci-report
+.PHONY: bootstrap up down logs backend-logs frontend-logs health test-backend tree smoke-sign-runway smoke-sign-kling smoke-sign-veo e2e-up e2e-test e2e-local e2e-down ci-e2e ci-report test-all test-suite test-report test-backend-only test-e2e-only test-load-only test-stress-only smoke package-tested
 
 bootstrap:
 	cp backend/.env.example backend/.env.dev || true
@@ -108,3 +108,34 @@ migration-heads:
 
 migration-check-single-head:
 	python backend/scripts/check_single_alembic_head.py
+
+# Full test suite
+test-all:
+	bash scripts/run_full_test_suite.sh
+
+test-suite: test-all
+
+test-report:
+	python scripts/generate_test_report.py results/latest
+
+# Individual test categories
+test-backend-only:
+	docker compose exec api pytest tests/integration/ -v -m integration
+
+test-e2e-only:
+	docker compose run --rm --profile e2e playwright
+
+test-load-only:
+	python backend/tests/load/test_load.py --jobs 100 --concurrent 10
+
+test-stress-only:
+	bash scripts/stress_test.sh
+
+# Quick smoke test
+smoke:
+	docker compose exec api python -m compileall app
+	curl -fsS http://localhost:8000/healthz
+
+# Generate ZIP package
+package-tested:
+	bash scripts/package_tested_release.sh
