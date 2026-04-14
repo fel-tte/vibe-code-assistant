@@ -205,6 +205,33 @@ def build_scene_dispatch_payload(provider: str, request_payload_json: str) -> di
 # =========================
 # Public entrypoint
 # =========================
+def get_dispatch_runtime_override() -> dict[str, Any]:
+    """
+    Return a dict of runtime override values for the dispatch worker.
+
+    Reads from the ``WorkerConcurrencyOverride`` table when a DB session
+    is available, falling back to application settings defaults so the
+    function stays non-blocking and usable without an open session.
+    """
+    try:
+        db = SessionLocal()
+        try:
+            override = get_or_create_worker_override(db)
+            return {
+                "enabled": bool(override.enabled),
+                "dispatch_batch_limit": int(override.dispatch_batch_limit),
+                "poll_countdown_seconds": int(override.poll_countdown_seconds),
+            }
+        finally:
+            db.close()
+    except Exception:
+        return {
+            "enabled": True,
+            "dispatch_batch_limit": settings.default_dispatch_batch_limit,
+            "poll_countdown_seconds": settings.default_poll_countdown_seconds,
+        }
+
+
 async def dispatch_scene_task(provider: str, request_payload_json: str) -> NormalizedSubmitResult:
     normalized_provider = _normalize_provider_name(provider)
     scene_payload = build_scene_dispatch_payload(normalized_provider, request_payload_json)

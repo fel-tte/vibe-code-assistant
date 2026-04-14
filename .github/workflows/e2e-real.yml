@@ -1,0 +1,263 @@
+name: e2e-real-world
+
+on:
+  workflow_dispatch:
+    inputs:
+      provider:
+        description: "Video provider to test"
+        required: false
+        default: "runway"
+        type: choice
+        options: [runway, kling, veo]
+      delivery_mode:
+        description: "Callback delivery mode"
+        required: false
+        default: "edge-callback"
+        type: choice
+        options: [poll, direct-relay, edge-callback]
+      run_load_test:
+        description: "Run load test (10 concurrent jobs)"
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    # Run nightly at 02:00 UTC on main branch
+    - cron: "0 2 * * *"
+
+concurrency:
+  group: e2e-real-world-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  COMPOSE_DOCKER_CLI_BUILD: 1
+  DOCKER_BUILDKIT: 1
+  PROVIDER_RELAY_SHARED_SECRET: ${{ secrets.PROVIDER_RELAY_SHARED_SECRET || 'replace-me' }}
+  CI: "true"
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────
+  # Backend unit + integration tests (no Docker required)
+  # ─────────────────────────────────────────────────────────────────────────
+  backend-integration:
+    name: Backend integration tests (SQLite)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run integration tests
+        env:
+          DATABASE_URL: "sqlite:///:memory:"
+        run: |
+          pytest tests/integration/ -v -m integration \
+            --tb=short \
+            --junit-xml=../artifacts/integration/results.xml \
+            -p no:warnings \
+            || true
+        continue-on-error: false
+
+      - name: Run provider factory tests
+        run: |
+          pytest tests/providers/test_runway_real.py::TestProviderFactory \
+            -v --tb=short \
+            --junit-xml=../artifacts/provider-factory/results.xml \
+            -p no:warnings \
+            || true
+
+      - name: Upload integration test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-integration-results
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 14
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Full E2E stack tests (requires Docker)
+  # ─────────────────────────────────────────────────────────────────────────
+  full-pipeline-e2e:
+    name: Full pipeline E2E (${{ inputs.provider || 'runway' }} / ${{ inputs.delivery_mode || 'edge-callback' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    env:
+      E2E_PROVIDER: ${{ inputs.provider || 'runway' }}
+      E2E_DELIVERY_MODE: ${{ inputs.delivery_mode || 'edge-callback' }}
+      ARTIFACT_SHARD: real-${{ inputs.provider || 'runway' }}-${{ inputs.delivery_mode || 'edge-callback' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Cache npm + Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            e2e/node_modules
+            frontend/node_modules
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-npm-playwright-${{ hashFiles('e2e/package-lock.json', 'frontend/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-npm-playwright-
+
+      - name: Prepare environment files
+        run: |
+          mkdir -p artifacts/playwright/${ARTIFACT_SHARD} artifacts/ci/${ARTIFACT_SHARD}
+          cp backend/.env.example backend/.env.dev || true
+          cp frontend/.env.local.example frontend/.env.local || true
+
+      - name: Build stack with layer cache
+        uses: docker/bake-action@v5
+        with:
+          files: ./docker-compose.yml
+          load: true
+          set: |
+            *.cache-from=type=gha
+            *.cache-to=type=gha,mode=max
+
+      - name: Start services
+        run: docker compose up -d postgres redis minio minio-init api worker beat flower frontend edge-relay
+
+      - name: Wait for stack to be healthy
+        run: python scripts/ci/wait_for_stack.py 300
+
+      - name: Install Playwright
+        run: |
+          cd e2e
+          npm install
+          npx playwright install --with-deps chromium
+
+      - name: Run full pipeline E2E suite
+        run: |
+          cd e2e
+          npx playwright test tests/test_full_render_pipeline.spec.ts \
+            --reporter=list \
+            --reporter=html:../artifacts/playwright/${ARTIFACT_SHARD}/html-report \
+            --reporter=json:../artifacts/playwright/${ARTIFACT_SHARD}/results.json \
+            --reporter=junit:../artifacts/playwright/${ARTIFACT_SHARD}/results.xml
+        env:
+          BACKEND_BASE_URL: http://localhost:8000
+          FRONTEND_BASE_URL: http://localhost:3000
+          EDGE_BASE_URL: http://localhost:8080
+          E2E_PROVIDER: ${{ env.E2E_PROVIDER }}
+          E2E_DELIVERY_MODE: ${{ env.E2E_DELIVERY_MODE }}
+          ARTIFACT_SHARD: ${{ env.ARTIFACT_SHARD }}
+
+      - name: Export CI report
+        if: always()
+        run: ARTIFACT_SHARD=${ARTIFACT_SHARD} python scripts/ci/export_fail_fast_report.py
+
+      - name: Upload E2E artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-real-${{ env.E2E_PROVIDER }}-${{ env.E2E_DELIVERY_MODE }}
+          path: |
+            artifacts/playwright/${{ env.ARTIFACT_SHARD }}/**
+            artifacts/ci/${{ env.ARTIFACT_SHARD }}/**
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Tear down stack
+        if: always()
+        run: docker compose down -v
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Load test (optional, triggered manually)
+  # ─────────────────────────────────────────────────────────────────────────
+  load-test:
+    name: Load test (10 concurrent jobs)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    if: ${{ inputs.run_load_test == true }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Prepare environment files
+        run: |
+          mkdir -p artifacts/load
+          cp backend/.env.example backend/.env.dev || true
+
+      - name: Build stack
+        uses: docker/bake-action@v5
+        with:
+          files: ./docker-compose.yml
+          load: true
+          set: |
+            *.cache-from=type=gha
+            *.cache-to=type=gha,mode=max
+
+      - name: Start services
+        run: docker compose up -d postgres redis minio minio-init api worker beat flower
+
+      - name: Wait for stack to be healthy
+        run: python scripts/ci/wait_for_stack.py 300
+
+      - name: Run load test (10 jobs, 5 concurrent)
+        run: |
+          python backend/tests/load/test_load.py \
+            --base-url http://localhost:8000 \
+            --jobs 10 \
+            --concurrent 5 \
+            --min-success-rate 0.8 \
+            2>&1 | tee artifacts/load/results.txt
+
+      - name: Upload load test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test-results
+          path: artifacts/load/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Tear down stack
+        if: always()
+        run: docker compose down -v

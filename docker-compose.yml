@@ -84,6 +84,14 @@ services:
       interval: 10s
       timeout: 5s
       retries: 30
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
 
   worker:
     build:
@@ -105,6 +113,14 @@ services:
       api:
         condition: service_healthy
     command: ["/bin/bash", "/app/scripts/start-worker.sh"]
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
 
   beat:
     build:
