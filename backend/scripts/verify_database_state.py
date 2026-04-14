@@ -18,8 +18,8 @@ def verify_tables():
     tables = inspector.get_table_names()
 
     required_tables = [
-        "render_job",
-        "render_scene_task",
+        "render_jobs",
+        "render_scene_tasks",
         "provider_webhook_event",
         "state_transition_event",
     ]
@@ -38,11 +38,11 @@ def verify_indexes():
     """Verify performance indexes"""
     inspector = inspect(engine)
 
-    # Check render_job indexes
-    job_indexes = inspector.get_indexes("render_job")
+    # Check render_jobs indexes
+    job_indexes = inspector.get_indexes("render_jobs")
     job_index_names = [idx["name"] for idx in job_indexes]
 
-    required_job_indexes = ["ix_render_job_state", "ix_render_job_created_at"]
+    required_job_indexes = ["ix_render_jobs_status", "ix_render_jobs_created_at"]
 
     for idx in required_job_indexes:
         if idx not in job_index_names:

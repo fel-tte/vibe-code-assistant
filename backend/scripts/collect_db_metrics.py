@@ -21,17 +21,17 @@ def collect_metrics():
 
         # Row counts
         metrics["render_jobs_total"] = session.execute(
-            text("SELECT COUNT(*) FROM render_job")
+            text("SELECT COUNT(*) FROM render_jobs")
         ).scalar()
 
         metrics["render_scenes_total"] = session.execute(
-            text("SELECT COUNT(*) FROM render_scene_task")
+            text("SELECT COUNT(*) FROM render_scene_tasks")
         ).scalar()
 
-        # State distribution
+        # Status distribution
         metrics["jobs_by_state"] = {}
         result = session.execute(
-            text("SELECT state, COUNT(*) FROM render_job GROUP BY state")
+            text("SELECT status, COUNT(*) FROM render_jobs GROUP BY status")
         )
         for row in result:
             metrics["jobs_by_state"][row[0]] = row[1]
