@@ -6,7 +6,9 @@ import time
 import psycopg
 
 
-DATABASE_URL = os.environ["DATABASE_URL"]
+_raw_url = os.environ["DATABASE_URL"]
+# psycopg.connect() needs a plain "postgresql://" URL, not SQLAlchemy's "postgresql+psycopg://"
+DATABASE_URL = _raw_url.replace("postgresql+psycopg://", "postgresql://", 1)
 
 max_attempts = 60
 attempt = 0
