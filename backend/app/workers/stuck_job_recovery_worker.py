@@ -5,7 +5,6 @@ from datetime import datetime, timedelta, timezone
 
 from app.core.celery_app import celery_app
 from app.db.session import SessionLocal
-from app.services.render_queue import enqueue_render_poll, enqueue_render_postprocess
 from app.services.render_repository import (
     compute_stuck_backoff_seconds,
     escalate_stuck_scene_task,
@@ -27,6 +26,9 @@ def recover_stuck_render_tasks() -> None:
     - retry poll fallback theo exponential backoff
     - escalate sang failed nếu vượt retry budget
     """
+
+    # Local import to avoid circular import with render_queue -> render_tasks -> worker modules.
+    from app.services.render_queue import enqueue_render_poll, enqueue_render_postprocess
 
     db = SessionLocal()
     try:

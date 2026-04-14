@@ -205,6 +205,24 @@ def build_scene_dispatch_payload(provider: str, request_payload_json: str) -> di
 # =========================
 # Public entrypoint
 # =========================
+def get_dispatch_runtime_override() -> dict[str, Any]:
+    """Load runtime override for dispatch worker with safe defaults."""
+    try:
+        with SessionLocal() as db:
+            row = get_or_create_worker_override(db, queue_name="render.dispatch")
+            return {
+                "dispatch_batch_limit": int(row.dispatch_batch_limit or settings.default_dispatch_batch_limit),
+                "poll_countdown_seconds": int(row.poll_countdown_seconds or settings.default_poll_countdown_seconds),
+                "enabled": bool(row.enabled),
+            }
+    except Exception:
+        return {
+            "dispatch_batch_limit": int(settings.default_dispatch_batch_limit),
+            "poll_countdown_seconds": int(settings.default_poll_countdown_seconds),
+            "enabled": True,
+        }
+
+
 async def dispatch_scene_task(provider: str, request_payload_json: str) -> NormalizedSubmitResult:
     normalized_provider = _normalize_provider_name(provider)
     scene_payload = build_scene_dispatch_payload(normalized_provider, request_payload_json)

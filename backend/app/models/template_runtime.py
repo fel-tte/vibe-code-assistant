@@ -55,3 +55,93 @@ class TemplateSelectionDecision(Base):
     alternatives_json: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
     outcome_label: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+
+
+
+
+class TemplateEvolutionEvent(Base):
+    """Event representing template evolution and learning"""
+    __tablename__ = "template_evolution_events"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    template_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    event_type: Mapped[str] = mapped_column(Text, nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    old_version: Mapped[str | None] = mapped_column(Text, nullable=True)
+    new_version: Mapped[str | None] = mapped_column(Text, nullable=True)
+    performance_delta: Mapped[float | None] = mapped_column(Numeric(5,2), nullable=True)
+    reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    metadata_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+
+
+class TemplateExtractedDraft(Base):
+    """Extracted template draft from source project"""
+    __tablename__ = "template_extracted_drafts"
+    
+    id: Mapped[uuid.UUID] = uuid_col()
+    source_project_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    extraction_fingerprint: Mapped[str] = mapped_column(Text, nullable=False)
+    draft_content_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    draft_version: Mapped[str] = mapped_column(Text, nullable=False, default="v1")
+    is_candidate: Mapped[bool] = mapped_column(nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    extracted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class TemplateExtractionJob(Base):
+    """Async extraction job for templates"""
+    __tablename__ = "template_extraction_jobs"
+    
+    id: Mapped[uuid.UUID] = uuid_col()
+    source_project_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    status: Mapped[str] = mapped_column(Text, nullable=False, default="pending")
+    auto_publish: Mapped[bool] = mapped_column(nullable=False, default=False)
+    extracted_draft_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("template_extracted_drafts.id", ondelete="SET NULL"), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class TemplateCompetitionRecord(Base):
+    """Record template competing against others"""
+    __tablename__ = "template_competition_records"
+    
+    id: Mapped[uuid.UUID] = uuid_col()
+    template_pack_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("template_packs.id", ondelete="CASCADE"), nullable=False)
+    competitor_pack_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("template_packs.id", ondelete="CASCADE"), nullable=False)
+    project_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    win_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    loss_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    tie_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    win_rate: Mapped[float] = mapped_column(Numeric(5,3), nullable=False, default=0.0)
+    last_compared_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+
+
+class TemplateLearningStat(Base):
+    """Learning statistics for template optimization"""
+    __tablename__ = "template_learning_stats"
+    
+    id: Mapped[uuid.UUID] = uuid_col()
+    template_pack_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("template_packs.id", ondelete="CASCADE"), nullable=False, unique=True)
+    total_uses: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    successful_uses: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    failed_uses: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    avg_render_quality: Mapped[float] = mapped_column(Numeric(5,3), nullable=False, default=0.0)
+    avg_user_satisfaction: Mapped[float] = mapped_column(Numeric(5,3), nullable=False, default=0.0)
+    recommendation_score: Mapped[float] = mapped_column(Numeric(5,3), nullable=False, default=0.0)
+    last_updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+
+
+class TemplateReusePreview(Base):
+    """Preview of template for reuse scenarios"""
+    __tablename__ = "template_reuse_previews"
+    
+    id: Mapped[uuid.UUID] = uuid_col()
+    source_draft_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("template_extracted_drafts.id", ondelete="SET NULL"), nullable=True)
+    target_project_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    preview_content_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    fit_score: Mapped[float] = mapped_column(Numeric(5,3), nullable=False, default=0.0)
+    adaptation_hints_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    valid_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

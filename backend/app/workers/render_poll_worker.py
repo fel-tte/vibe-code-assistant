@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 from app.services.asset_collector import cache_remote_video
 from app.services.render_poll_service import poll_scene_task
 from app.services.render_timeline_poll_writer import append_poll_timeline_event_if_needed
-from app.services.render_queue import enqueue_render_poll, enqueue_render_postprocess
 from app.services.render_repository import (
     get_render_job_by_id,
     get_scene_task_by_id,
@@ -18,6 +17,9 @@ from app.services.render_repository import (
 
 
 async def process_render_poll(db: Session, job_id: str, scene_task_id: str) -> None:
+    # Local import to avoid circular import with render_queue -> render_tasks -> worker modules.
+    from app.services.render_queue import enqueue_render_poll, enqueue_render_postprocess
+
     job = get_render_job_by_id(db, job_id, with_scenes=False)
     scene = get_scene_task_by_id(db, scene_task_id)
 

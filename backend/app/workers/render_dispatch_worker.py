@@ -3,7 +3,6 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from app.services.render_dispatch_service import dispatch_scene_task, get_dispatch_runtime_override
-from app.services.render_queue import enqueue_render_dispatch, enqueue_render_poll
 from app.services.kill_switch import get_or_create_global_kill_switch
 from app.services.render_repository import (
     get_render_job_by_id,
@@ -27,6 +26,10 @@ async def process_render_dispatch(db: Session, job_id: str) -> None:
     5) nếu còn ít nhất 1 scene submit thành công -> job polling
     """
     job = get_render_job_by_id(db, job_id, with_scenes=False)
+
+    # Local import to avoid circular import with render_queue -> render_tasks -> this worker.
+    from app.services.render_queue import enqueue_render_dispatch, enqueue_render_poll
+
     if not job:
         return
 

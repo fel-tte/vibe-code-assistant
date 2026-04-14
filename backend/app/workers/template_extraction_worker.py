@@ -10,5 +10,5 @@ def run(self, extraction_id: str):
         extraction = repo.get_extraction(extraction_id)
         if extraction is None:
             return {"status": "missing", "extraction_id": extraction_id}
-                result = TemplateExtractionService(repo).perform_extraction(extraction_id)
+        result = TemplateExtractionService(repo).perform_extraction(extraction_id)
         return {"status": "completed", "extraction_id": extraction_id, "template_pack_id": str(result["template_pack"].id)}
