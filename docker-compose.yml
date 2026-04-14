@@ -66,6 +66,7 @@ services:
     env_file:
       - ./backend/.env.dev
     environment:
+      BACKEND_SCHEMA_BOOTSTRAP: ${BACKEND_SCHEMA_BOOTSTRAP:-}
       PYTHONPATH: /app
     volumes:
       - ./backend:/app

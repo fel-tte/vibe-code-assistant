@@ -25,6 +25,7 @@ jobs:
         provider: [runway, veo, kling]
         delivery_mode: [poll, direct-relay, edge-callback]
     env:
+      BACKEND_SCHEMA_BOOTSTRAP: metadata-create-all
       COMPOSE_DOCKER_CLI_BUILD: 1
       DOCKER_BUILDKIT: 1
       PROVIDER_RELAY_SHARED_SECRET: replace-me
@@ -137,6 +138,7 @@ jobs:
           - provider: runway
             delivery_mode: direct-relay
     env:
+      BACKEND_SCHEMA_BOOTSTRAP: metadata-create-all
       COMPOSE_DOCKER_CLI_BUILD: 1
       DOCKER_BUILDKIT: 1
       PROVIDER_RELAY_SHARED_SECRET: replace-me
@@ -230,6 +232,7 @@ jobs:
           - provider: kling
             delivery_mode: edge-callback
     env:
+      BACKEND_SCHEMA_BOOTSTRAP: metadata-create-all
       COMPOSE_DOCKER_CLI_BUILD: 1
       DOCKER_BUILDKIT: 1
       PROVIDER_RELAY_SHARED_SECRET: replace-me
