@@ -29,14 +29,14 @@ class TemplateGovernanceActionOutcomeAnalytics(Base):
 
 
 Index(
-    "ix_template_governance_action_outcome_analytics_bulk_operation_id",
+    "ix_tgoa_bulk_operation_id",
     TemplateGovernanceActionOutcomeAnalytics.bulk_operation_id,
 )
 Index(
-    "ix_template_governance_action_outcome_analytics_outcome_label",
+    "ix_tgoa_outcome_label",
     TemplateGovernanceActionOutcomeAnalytics.outcome_label,
 )
 Index(
-    "ix_template_governance_action_outcome_analytics_created_at",
+    "ix_tgoa_created_at",
     TemplateGovernanceActionOutcomeAnalytics.created_at,
 )
