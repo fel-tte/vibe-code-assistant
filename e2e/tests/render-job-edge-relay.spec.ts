@@ -178,7 +178,7 @@ async function waitForCompletedJob(request: any, jobId: string): Promise<Json> {
 
 
 async function findIncidentByJobId(request: any, jobId: string): Promise<Json> {
-  const payload = await getJson(request, `${BACKEND_BASE_URL}/api/v1/render/incidents/recent?limit=50&show_muted=true`);
+  const payload = await getJson(request, `${BACKEND_BASE_URL}/api/v1/render/dashboard/incidents/recent?limit=50&show_muted=true`);
   const items = payload.items || [];
   const incident = items.find((item: any) => item.job?.job_id === jobId || item.job?.id === jobId);
   if (!incident) {
@@ -280,7 +280,7 @@ test("dashboard incident drawer opens for failed provider callback", async ({ pa
   await postJson(request, `${BACKEND_BASE_URL}/api/v1/provider-callbacks/relay/${PROVIDER}`, failurePayload, buildRelayHeaders(rawBody));
 
   await waitFor(
-    async () => await getJson(request, `${BACKEND_BASE_URL}/api/v1/render/incidents/recent?limit=50&show_muted=true`),
+    async () => await getJson(request, `${BACKEND_BASE_URL}/api/v1/render/dashboard/incidents/recent?limit=50&show_muted=true`),
     (payload) => Boolean((payload.items || []).find((item: any) => item.job?.job_id === jobId || item.job?.id === jobId)),
     120_000,
     5_000,
