@@ -127,6 +127,8 @@ def mock_query_result(provider: str) -> NormalizedStatusResult:
         provider=provider,
         state="succeeded",
         provider_status_raw="MOCK_SUCCEEDED",
+        output_video_url=f"https://example.invalid/mock-output/{provider}-mock.mp4",
+        output_thumbnail_url=f"https://example.invalid/mock-output/{provider}-mock-thumb.jpg",
         metadata={"mock": True},
         raw_response={"mock": True},
     )
