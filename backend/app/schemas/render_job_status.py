@@ -3,10 +3,12 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class RenderSceneTaskStatusData(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     job_id: str
     scene_index: int
@@ -21,6 +23,8 @@ class RenderSceneTaskStatusData(BaseModel):
 
 
 class RenderJobStatusData(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     project_id: str
     provider: str
