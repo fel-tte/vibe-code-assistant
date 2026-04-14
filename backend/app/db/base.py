@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from sqlalchemy import MetaData
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import DeclarativeBase
 
 
@@ -15,4 +17,10 @@ NAMING_CONVENTION = {
 
 class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
+
+
+@compiles(JSONB, "sqlite")
+def compile_jsonb_sqlite(_type, _compiler, **_kw) -> str:
+    # Allow PostgreSQL JSONB columns to be created in SQLite-backed tests.
+    return "JSON"
     

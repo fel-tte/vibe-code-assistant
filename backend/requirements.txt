@@ -13,6 +13,7 @@ pydantic
 python-docx
 python-dotenv
 python-multipart
+pytest
 redis
 sqlalchemy
 uvicorn[standard]

@@ -73,6 +73,12 @@ __all__ = [
     "TemplateGovernanceStepCooldown",
     "TemplateGovernancePostPlanEvaluation",
     "TemplateGovernancePolicyPromotionPath",
+    "TemplateGovernanceExecutionPlan",
+    "TemplateGovernanceExecutionStep",
+    "TemplateGovernancePlanTimelineEvent",
+    "TemplateGovernanceActionOutcomeAnalytics",
+    "Project",
+    "Scene",
 ]
 
 from app.models.worker_concurrency_override import WorkerConcurrencyOverride
@@ -134,3 +140,13 @@ from app.models.template_governance_schedule import (
     TemplateGovernancePostPlanEvaluation,
     TemplateGovernancePolicyPromotionPath,
 )
+
+from app.models.template_governance_execution import (
+    TemplateGovernanceExecutionPlan,
+    TemplateGovernanceExecutionStep,
+    TemplateGovernancePlanTimelineEvent,
+)
+
+from app.models.template_governance_bulk_ops import TemplateGovernanceActionOutcomeAnalytics
+
+from app.models.core_placeholders import Project, Scene
