@@ -14,3 +14,8 @@ frontend/node_modules/
 *.log
 .pytest_cache/
 .mypy_cache/
+/artifacts/
+/dist/
+test_production_simulation.sh
+production_test_*/
+test_reports_*/
