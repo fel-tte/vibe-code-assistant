@@ -215,6 +215,7 @@ services:
       /bin/bash -lc "
       cd /workspace/e2e &&
       npm install &&
+      npx playwright install chromium &&
       mkdir -p /workspace/artifacts/playwright/${ARTIFACT_SHARD} &&
       npx playwright test
       "
