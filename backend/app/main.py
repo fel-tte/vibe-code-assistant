@@ -1,9 +1,14 @@
 from __future__ import annotations
 
-from fastapi import FastAPI
+import uuid
+import logging
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 
 from app.api.health import router as health_router
 from app.api.project_from_preview import router as project_from_preview_router
@@ -34,6 +39,20 @@ from app.api.template_extraction import router as template_extraction_router
 from app.api.template_governance_scheduling import router as template_governance_scheduling_router
 from app.core.config import settings
 
+logger = logging.getLogger(__name__)
+
+
+class RequestIDMiddleware(BaseHTTPMiddleware):
+    """Attach a unique X-Request-ID to every request/response for tracing."""
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+        request.state.request_id = request_id
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+        return response
+
+
 app = FastAPI(
     title="Render Factory API",
     version="1.0.0",
@@ -41,6 +60,9 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_url="/openapi.json",
 )
+
+# ── Middlewares ──────────────────────────────────────────────────────────────
+app.add_middleware(RequestIDMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -55,6 +77,18 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── Rate limiting (slowapi) ──────────────────────────────────────────────────
+try:
+    from slowapi import Limiter, _rate_limit_exceeded_handler
+    from slowapi.errors import RateLimitExceeded
+    from slowapi.util import get_remote_address
+
+    limiter = Limiter(key_func=get_remote_address)
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+except ImportError:
+    logger.warning("slowapi not installed – rate limiting disabled")
 
 _storage_dir = Path("storage")
 _storage_dir.mkdir(parents=True, exist_ok=True)
