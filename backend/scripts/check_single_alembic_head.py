@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ci-trigger: 2026-04-14
 from __future__ import annotations
 
 import json
