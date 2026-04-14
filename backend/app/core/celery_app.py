@@ -18,6 +18,7 @@ celery_app = Celery(
         "app.workers.template_extraction_worker",
         "app.workers.template_rescore_worker",
         "app.workers.template_feedback_worker",
+        "app.workers.autopilot_worker",
     ],
 )
 

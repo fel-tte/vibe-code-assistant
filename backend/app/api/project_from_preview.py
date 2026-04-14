@@ -2,17 +2,14 @@ from __future__ import annotations
 
 import json
 import uuid
-from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
 
 from app.schemas.script_preview import ConfirmCreateProjectRequest
+from app.services.project_workspace_service import PROJECT_STORAGE_DIR
 from app.services.script_validation_issues import validate_preview_with_issues
 
 router = APIRouter(tags=["projects"])
-
-PROJECT_STORAGE_DIR = Path("storage/projects")
-PROJECT_STORAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @router.post("/api/v1/projects/create-from-script-preview")

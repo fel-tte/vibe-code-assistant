@@ -3,7 +3,6 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pathlib import Path
 
 from app.api.health import router as health_router
 from app.api.project_from_preview import router as project_from_preview_router
@@ -33,6 +32,7 @@ from app.api.veo_workspace import router as veo_workspace_router
 from app.api.template_extraction import router as template_extraction_router
 from app.api.template_governance_scheduling import router as template_governance_scheduling_router
 from app.core.config import settings
+from app.services.project_workspace_service import PROJECT_STORAGE_DIR
 
 app = FastAPI(
     title="Render Factory API",
@@ -56,7 +56,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-_storage_dir = Path("storage")
+_storage_dir = PROJECT_STORAGE_DIR.parent
 _storage_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/storage", StaticFiles(directory=str(_storage_dir)), name="storage")
 

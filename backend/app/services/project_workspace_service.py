@@ -1,9 +1,21 @@
 from __future__ import annotations
 import json
 from pathlib import Path
+import tempfile
 
-PROJECT_STORAGE_DIR = Path("storage/projects")
-PROJECT_STORAGE_DIR.mkdir(parents=True, exist_ok=True)
+
+def _resolve_project_storage_dir() -> Path:
+    preferred = Path("storage/projects")
+    try:
+        preferred.mkdir(parents=True, exist_ok=True)
+        return preferred
+    except PermissionError:
+        fallback = Path(tempfile.gettempdir()) / "render-factory-storage" / "projects"
+        fallback.mkdir(parents=True, exist_ok=True)
+        return fallback
+
+
+PROJECT_STORAGE_DIR = _resolve_project_storage_dir()
 
 def _project_dir(project_id: str) -> Path:
     return PROJECT_STORAGE_DIR / project_id
