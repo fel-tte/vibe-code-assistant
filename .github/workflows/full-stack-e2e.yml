@@ -99,11 +99,12 @@ jobs:
           npx playwright install --with-deps chromium
 
       - name: Run Playwright suite
-        run: docker compose --profile e2e run --rm \
-          -e E2E_PROVIDER=${{ matrix.provider }} \
-          -e E2E_DELIVERY_MODE=${{ matrix.delivery_mode }} \
-          -e ARTIFACT_SHARD=${ARTIFACT_SHARD} \
-          playwright
+        run: |
+          docker compose --profile e2e run --rm \
+            -e E2E_PROVIDER=${{ matrix.provider }} \
+            -e E2E_DELIVERY_MODE=${{ matrix.delivery_mode }} \
+            -e ARTIFACT_SHARD=${ARTIFACT_SHARD} \
+            playwright
 
       - name: Export fail-fast report
         if: always()
@@ -193,11 +194,12 @@ jobs:
           npx playwright install --with-deps chromium
 
       - name: Run focused Playwright suite
-        run: docker compose --profile e2e run --rm \
-          -e E2E_PROVIDER=${{ matrix.provider }} \
-          -e E2E_DELIVERY_MODE=${{ matrix.delivery_mode }} \
-          -e ARTIFACT_SHARD=${ARTIFACT_SHARD} \
-          playwright
+        run: |
+          docker compose --profile e2e run --rm \
+            -e E2E_PROVIDER=${{ matrix.provider }} \
+            -e E2E_DELIVERY_MODE=${{ matrix.delivery_mode }} \
+            -e ARTIFACT_SHARD=${ARTIFACT_SHARD} \
+            playwright
 
       - name: Export fail-fast report
         if: always()
@@ -287,11 +289,12 @@ jobs:
           npx playwright install --with-deps chromium
 
       - name: Run edge-focused Playwright suite
-        run: docker compose --profile e2e run --rm \
-          -e E2E_PROVIDER=${{ matrix.provider }} \
-          -e E2E_DELIVERY_MODE=${{ matrix.delivery_mode }} \
-          -e ARTIFACT_SHARD=${ARTIFACT_SHARD} \
-          playwright
+        run: |
+          docker compose --profile e2e run --rm \
+            -e E2E_PROVIDER=${{ matrix.provider }} \
+            -e E2E_DELIVERY_MODE=${{ matrix.delivery_mode }} \
+            -e ARTIFACT_SHARD=${ARTIFACT_SHARD} \
+            playwright
 
       - name: Export fail-fast report
         if: always()
