@@ -77,7 +77,7 @@ jobs:
 
       - name: Replay flaky candidates
         run: |
-          docker compose run --rm --profile e2e \
+          docker compose --profile e2e run --rm \
             -e E2E_PROVIDER=${E2E_PROVIDER} \
             -e E2E_DELIVERY_MODE=${E2E_DELIVERY_MODE} \
             -e ARTIFACT_SHARD=${ARTIFACT_SHARD} \
