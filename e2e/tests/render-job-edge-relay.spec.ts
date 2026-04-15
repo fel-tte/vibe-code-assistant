@@ -305,8 +305,7 @@ test("dashboard incident drawer opens for failed provider callback", async ({ pa
   await expect(incidentCard).toBeVisible();
   await incidentCard.click();
   await expect(page.getByTestId("incident-drawer")).toBeVisible();
-  // Wait for incident detail to load: either we see history items or the loading completes
-  await expect(page.getByTestId("incident-drawer").locator('text=/Workflow history|Loading incident workflow history/i')).toBeVisible({ timeout: 30000 });
+  await expect(page.getByTestId("incident-drawer").getByText("Workflow history", { exact: true })).toBeVisible({ timeout: 30000 });
   // Then wait for loading to finish - check that the loading text is gone or history items appear
   await page.getByTestId("incident-drawer").locator('text=/Loading incident workflow history/i').waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
 });
