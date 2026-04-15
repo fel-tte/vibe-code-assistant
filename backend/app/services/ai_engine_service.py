@@ -60,6 +60,6 @@ def test_openrouter_key(api_key: str) -> dict:
         return {"ok": False, "detail": f"OpenRouter trả về HTTP {resp.status_code}"}
     except httpx.TimeoutException:
         return {"ok": False, "detail": "Request timed out khi kết nối OpenRouter"}
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("OpenRouter key test error: %s", exc)
+    except httpx.HTTPError as exc:
+        logger.warning("OpenRouter key test HTTP error: %s", exc)
         return {"ok": False, "detail": str(exc)}
