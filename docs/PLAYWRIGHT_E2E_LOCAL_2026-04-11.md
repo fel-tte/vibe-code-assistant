@@ -36,7 +36,7 @@ Then it runs Playwright inside the `playwright` service.
 
 Default:
 ```bash
-E2E_PROVIDER=runway
+E2E_PROVIDER=veo
 E2E_DELIVERY_MODE=edge-callback
 ```
 

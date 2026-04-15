@@ -19,3 +19,5 @@ frontend/node_modules/
 test_production_simulation.sh
 production_test_*/
 test_reports_*/
+celerybeat-schedule
+celerybeat-schedule.db
