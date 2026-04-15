@@ -22,7 +22,7 @@ class ProviderClientProtocol(Protocol):
 class MockProviderClient:
     """
     Mock production-safe client để pipeline chạy kín local/dev.
-    Có thể thay bằng Veo / Runway / Kling thật sau.
+    Có thể thay bằng VeoProviderClient thật sau.
     """
 
     async def dispatch_scene(self, *, job: Any, scene_task: Any) -> dict[str, Any]:

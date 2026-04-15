@@ -118,10 +118,6 @@ class RenderJobCreateRequest(BaseModel):
             "veo_3",
             "veo_3_1",
             "google_veo",
-            "runway",
-            "runwayml",
-            "kling",
-            "klingai",
         }
         if normalized not in allowed:
             raise ValueError(f"provider must be one of {sorted(allowed)}")

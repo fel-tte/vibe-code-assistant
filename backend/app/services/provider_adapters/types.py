@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any, Literal
 
 
-AdapterKind = Literal["google_gemini", "runway", "kling"]
+AdapterKind = Literal["google_gemini"]
 ProviderMode = Literal["text_to_video", "image_to_video", "first_last_frames", "reference_image_to_video"]
 
 

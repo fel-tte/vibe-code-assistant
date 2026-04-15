@@ -22,7 +22,7 @@ def _env(name: str, default: str | None = None) -> str | None:
 
 BACKEND_RELAY_BASE_URL = (_env("BACKEND_RELAY_BASE_URL", "http://localhost:8000/api/v1/provider-callbacks/relay") or "").rstrip("/")
 DEFAULT_SHARED_SECRET = _env("PROVIDER_RELAY_SHARED_SECRET")
-ALLOWED_PROVIDERS = {p.strip().lower() for p in (_env("EDGE_ALLOWED_PROVIDERS", "runway,veo,kling") or "").split(",") if p.strip()}
+ALLOWED_PROVIDERS = {p.strip().lower() for p in (_env("EDGE_ALLOWED_PROVIDERS", "veo") or "").split(",") if p.strip()}
 FORWARD_TIMEOUT_SECONDS = float(_env("EDGE_FORWARD_TIMEOUT_SECONDS", "30") or "30")
 
 
@@ -76,7 +76,7 @@ async def relay_provider_callback(provider: str, request: Request) -> dict[str, 
     }
 
     source_headers = {k.lower(): v for k, v in request.headers.items()}
-    for key in ["x-provider-signature", "x-render-signature", "x-kling-signature", "x-runway-signature"]:
+    for key in ["x-provider-signature", "x-render-signature"]:
         if key in source_headers:
             forward_headers[f"X-Original-{key.title()}"] = source_headers[key]
 
