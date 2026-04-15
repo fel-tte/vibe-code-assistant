@@ -1097,3 +1097,74 @@ export async function getExecutionPlanPolicyPath(planId: string): Promise<any> {
   if (!res.ok) throw new Error("Failed to load execution plan policy path");
   return res.json();
 }
+
+
+// ─── Google Accounts (multi-account rotation) ──────────────────────────────
+
+export interface GoogleAccount {
+  id: string;
+  label: string;
+  has_gemini_api_key: boolean;
+  google_cloud_project: string | null;
+  google_cloud_location: string;
+  gcs_output_uri: string | null;
+  use_vertex: boolean;
+  is_active: boolean;
+  rotation_enabled: boolean;
+  last_used_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function listGoogleAccounts(): Promise<{ items: GoogleAccount[] }> {
+  return handle<{ items: GoogleAccount[] }>(
+    await fetch(`${API_BASE}/api/v1/google-accounts`, { cache: "no-store" })
+  );
+}
+
+export async function createGoogleAccount(payload: {
+  label: string;
+  gemini_api_key?: string;
+  google_cloud_project?: string;
+  google_cloud_location?: string;
+  gcs_output_uri?: string;
+  use_vertex?: boolean;
+  is_active?: boolean;
+  rotation_enabled?: boolean;
+}): Promise<GoogleAccount> {
+  return handle<GoogleAccount>(
+    await fetch(`${API_BASE}/api/v1/google-accounts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+  );
+}
+
+export async function updateGoogleAccount(
+  id: string,
+  payload: Partial<{
+    label: string;
+    gemini_api_key: string;
+    google_cloud_project: string;
+    google_cloud_location: string;
+    gcs_output_uri: string;
+    use_vertex: boolean;
+    is_active: boolean;
+    rotation_enabled: boolean;
+  }>
+): Promise<GoogleAccount> {
+  return handle<GoogleAccount>(
+    await fetch(`${API_BASE}/api/v1/google-accounts/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+  );
+}
+
+export async function deleteGoogleAccount(id: string): Promise<{ deleted: boolean }> {
+  return handle<{ deleted: boolean }>(
+    await fetch(`${API_BASE}/api/v1/google-accounts/${id}`, { method: "DELETE" })
+  );
+}

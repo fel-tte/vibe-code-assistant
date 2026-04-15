@@ -79,6 +79,7 @@ __all__ = [
     "TemplateGovernanceActionOutcomeAnalytics",
     "Project",
     "Scene",
+    "GoogleAccount",
 ]
 
 from app.models.worker_concurrency_override import WorkerConcurrencyOverride
@@ -150,3 +151,4 @@ from app.models.template_governance_execution import (
 from app.models.template_governance_bulk_ops import TemplateGovernanceActionOutcomeAnalytics
 
 from app.models.core_placeholders import Project, Scene
+from app.models.google_account import GoogleAccount
