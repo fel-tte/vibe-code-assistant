@@ -390,20 +390,6 @@ function RenderJobsDashboardPageContent() {
     const previousIncident = incident;
     setLoadingAction((prev) => ({ ...prev, [incidentKey]: action }));
     try {
-      const normalizedAction = action === "ack" ? "acknowledge" : action === "reopen" ? "resolve" : action;
-      const guardrails = await getBulkIncidentGuardrails({
-        action_type: normalizedAction,
-        actor,
-        incident_keys: selectedKeys,
-        assigned_to: action === "assign" ? assignee : undefined,
-        muted_until: action === "mute" ? new Date(Date.now() + 3600_000).toISOString() : undefined,
-        reason,
-      });
-      setLastGuardrailCheck(guardrails);
-      if (!guardrails.ok) {
-        pushToast("Bulk action blocked", guardrails.blocked_reasons.join(", "), "error");
-        return;
-      }
       if (action === "ack") {
         applyOptimisticPatch(incidentKey, { acknowledged: true, workflow_status: "acknowledged", current_status: "acknowledged", current_reason: reason });
         await acknowledgeRenderIncident({ incident_key: incidentKey, actor, reason });
@@ -686,9 +672,21 @@ function RenderJobsDashboardPageContent() {
               {incidents.map((incident) => {
                 const active = incident.incident_key === selectedIncidentKey;
                 return (
-                  <div data-testid="incident-card" key={incident.incident_key} className={`rounded-2xl border p-4 ${active ? "border-sky-400/30 bg-sky-500/10" : "border-white/10 bg-black/20"}`}>
+                  <div
+                    data-testid="incident-card"
+                    key={incident.incident_key}
+                    onClick={() => syncUrl({ incident: incident.incident_key })}
+                    className={`rounded-2xl border p-4 ${active ? "border-sky-400/30 bg-sky-500/10" : "border-white/10 bg-black/20"}`}
+                  >
                     <div className="flex items-start gap-3">
-                      <input data-testid="incident-select-checkbox" type="checkbox" checked={selectedKeys.includes(incident.incident_key)} onChange={() => toggleSelect(incident.incident_key)} className="mt-1" />
+                      <input
+                        data-testid="incident-select-checkbox"
+                        type="checkbox"
+                        checked={selectedKeys.includes(incident.incident_key)}
+                        onClick={(event) => event.stopPropagation()}
+                        onChange={() => toggleSelect(incident.incident_key)}
+                        className="mt-1"
+                      />
                       <button type="button" onClick={() => syncUrl({ incident: incident.incident_key })} className="flex-1 text-left">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="text-sm font-semibold text-white">{incident.incident_key}</span>
@@ -699,6 +697,7 @@ function RenderJobsDashboardPageContent() {
                         </div>
                         <p className="mt-2 text-sm text-white/65">{incident.current_reason || incident.job.health_reason || incident.event_type}</p>
                         <div className="mt-3 flex flex-wrap gap-4 text-xs text-white/45">
+                          <span>job: {incident.job.job_id}</span>
                           <span>provider: {incident.job.provider}</span>
                           <span>project: {incident.job.project_id}</span>
                           <span>{new Date(incident.occurred_at).toLocaleString()}</span>

@@ -150,9 +150,13 @@ interface ApiEnvelope<T> {
   meta?: Record<string, unknown>;
 }
 
-const API_BASE_URL =
+const API_BASE_ROOT =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "") ||
   "http://localhost:8000/api/v1";
+
+const API_BASE_URL = API_BASE_ROOT.endsWith("/api/v1")
+  ? API_BASE_ROOT
+  : `${API_BASE_ROOT}/api/v1`;
 
 const RAW_BASE_URL = API_BASE_URL.endsWith("/api/v1")
   ? API_BASE_URL.slice(0, -7)
@@ -222,7 +226,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
   const json = (await res.json()) as ApiEnvelope<T> | T;
 
-  if (typeof json === "object" && json !== null && "ok" in json) {
+  if (typeof json === "object" && json !== null && "ok" in json && ("data" in json || "error" in json)) {
     const envelope = json as ApiEnvelope<T>;
     if (!envelope.ok) {
       throw new Error(envelope.error?.message || "Request failed");
@@ -388,7 +392,7 @@ export async function createRenderJob(input: {
 
 export async function getRenderJob(jobId: string): Promise<RenderJob> {
   const data = await request<any>(`/render/jobs/${jobId}`, { method: "GET" });
-  return { id: data.id, job_id: data.id || jobId, project_id: data.project_id, status: data.status, provider: data.provider, aspect_ratio: data.aspect_ratio, style_preset: data.style_preset, subtitle_mode: data.subtitle_mode, planned_scene_count: data.planned_scene_count ?? 0, completed_scene_count: Array.isArray(data.scenes) ? data.scenes.filter((scene: any) => scene.status === "succeeded").length : 0, failed_scene_count: Array.isArray(data.scenes) ? data.scenes.filter((scene: any) => scene.status === "failed").length : 0, scenes: Array.isArray(data.scenes) ? data.scenes.map((scene: any) => ({ id: scene.id, job_id: scene.job_id, scene_index: scene.scene_index, title: scene.title || `Scene ${scene.scene_index}`, status: scene.status, provider_task_id: scene.provider_task_id, provider_operation_name: scene.provider_operation_name, output_url: scene.output_url, output_path: scene.output_path, error_message: scene.error_message, completed_at: scene.completed_at })) : [], started_at: data.started_at, completed_at: data.completed_at, created_at: data.created_at, updated_at: data.updated_at, final_video_url: data.output_url, output_url: data.output_url, output_path: data.output_path, storage_key: data.storage_key, thumbnail_url: data.thumbnail_url, timeline: data.final_timeline, final_timeline: data.final_timeline, subtitle_segments: Array.isArray(data.subtitle_segments) ? data.subtitle_segments : null, error_message: data.error_message };
+  return { id: data.id, job_id: data.job_id || data.id || jobId, project_id: data.project_id, status: data.status, provider: data.provider, aspect_ratio: data.aspect_ratio, style_preset: data.style_preset, subtitle_mode: data.subtitle_mode, planned_scene_count: data.planned_scene_count ?? 0, completed_scene_count: Array.isArray(data.scenes) ? data.scenes.filter((scene: any) => scene.status === "succeeded").length : 0, failed_scene_count: Array.isArray(data.scenes) ? data.scenes.filter((scene: any) => scene.status === "failed").length : 0, scenes: Array.isArray(data.scenes) ? data.scenes.map((scene: any) => ({ id: scene.id, job_id: scene.job_id, scene_index: scene.scene_index, title: scene.title || `Scene ${scene.scene_index}`, status: scene.status, provider_task_id: scene.provider_task_id, provider_operation_name: scene.provider_operation_name, output_url: scene.output_url, local_video_path: scene.local_video_path, error_message: scene.error_message })) : [], started_at: data.started_at, completed_at: data.completed_at, created_at: data.created_at, updated_at: data.updated_at, final_video_url: data.final_video_url || data.output_url, output_url: data.output_url || data.final_video_url, output_path: data.output_path, storage_key: data.storage_key, thumbnail_url: data.thumbnail_url, timeline: data.final_timeline, final_timeline: data.final_timeline, subtitle_segments: Array.isArray(data.subtitle_segments) ? data.subtitle_segments : null, error_message: data.error_message };
 }
 
 export async function getHealth(): Promise<HealthCheckPayload> {
