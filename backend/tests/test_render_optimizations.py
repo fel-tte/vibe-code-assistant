@@ -57,5 +57,5 @@ def test_poll_countdown_is_capped() -> None:
 
 def test_poll_countdown_max_reached() -> None:
     """After enough retries the countdown equals the maximum."""
-    # With base=15 and max=300, cap is hit at attempt 4 (15*16=240 < 300, 15*32=480 > 300).
+    # With base=15 and max=300, cap is hit at attempt 5 (15*2^5=480 > 300).
     assert _poll_countdown(100) == _POLL_MAX_SECONDS

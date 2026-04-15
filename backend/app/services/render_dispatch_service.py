@@ -24,12 +24,8 @@ def _safe_json_loads(value: str | None) -> dict[str, Any]:
         return {}
 
 
-def _normalize_provider_name(provider: str) -> str:
-    return normalize_provider_name(provider)
-
-
 def _build_callback_url(provider: str) -> str:
-    normalized_provider = _normalize_provider_name(provider)
+    normalized_provider = normalize_provider_name(provider)
 
     if settings.provider_callback_use_relay and settings.provider_callback_public_base_url:
         relay_base = settings.provider_callback_public_base_url.rstrip("/")
@@ -65,7 +61,7 @@ def _resolve_duration_seconds(raw: dict[str, Any], provider: str) -> int:
     except (TypeError, ValueError):
         duration = 5
 
-    normalized_provider = _normalize_provider_name(provider)
+    normalized_provider = normalize_provider_name(provider)
 
     # provider-aware guardrails
     if normalized_provider == "veo":
@@ -101,7 +97,7 @@ def _resolve_metadata(raw: dict[str, Any], provider: str) -> dict[str, Any]:
     return {
         "scene_index": raw.get("scene_index"),
         "title": raw.get("title"),
-        "source_provider": _normalize_provider_name(provider),
+        "source_provider": normalize_provider_name(provider),
         **metadata,
     }
 
@@ -142,7 +138,7 @@ def _build_provider_payload(raw: dict[str, Any], provider: str) -> dict[str, Any
 
 
 def build_scene_dispatch_payload(provider: str, request_payload_json: str) -> dict[str, Any]:
-    normalized_provider = _normalize_provider_name(provider)
+    normalized_provider = normalize_provider_name(provider)
     raw = _safe_json_loads(request_payload_json)
     return _build_provider_payload(raw, normalized_provider)
 
@@ -169,7 +165,7 @@ def get_dispatch_runtime_override() -> dict[str, Any]:
 
 
 async def dispatch_scene_task(provider: str, request_payload_json: str) -> NormalizedSubmitResult:
-    normalized_provider = _normalize_provider_name(provider)
+    normalized_provider = normalize_provider_name(provider)
     scene_payload = build_scene_dispatch_payload(normalized_provider, request_payload_json)
     callback_url = _build_callback_url(normalized_provider)
 
