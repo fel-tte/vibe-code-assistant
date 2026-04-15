@@ -3,10 +3,14 @@
 import { useEffect, useState } from "react";
 import {
   GoogleAccount,
+  AiEngineConfig,
   listGoogleAccounts,
   createGoogleAccount,
   updateGoogleAccount,
   deleteGoogleAccount,
+  getAiEngineConfig,
+  saveAiEngineConfig,
+  testOpenRouterKey,
 } from "@/src/lib/api";
 
 // ─── Blank form ──────────────────────────────────────────────────────────────
@@ -27,7 +31,7 @@ type FormState = typeof EMPTY_FORM;
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
-  const [tab, setTab] = useState<"accounts">("accounts");
+  const [tab, setTab] = useState<"accounts" | "ai_engine">("accounts");
   const [accounts, setAccounts] = useState<GoogleAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -129,6 +133,17 @@ export default function SettingsPage() {
             ].join(" ")}
           >
             Accounts
+          </button>
+          <button
+            onClick={() => setTab("ai_engine")}
+            className={[
+              "px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition",
+              tab === "ai_engine"
+                ? "border-white text-white"
+                : "border-transparent text-neutral-400 hover:text-white",
+            ].join(" ")}
+          >
+            AI Engine
           </button>
         </div>
 
@@ -290,12 +305,179 @@ export default function SettingsPage() {
           </div>
         )}
 
+        {/* AI Engine Tab */}
+        {tab === "ai_engine" && <AiEngineTab />}
+
       </div>
     </main>
   );
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
+
+// ─── AI Engine Tab ───────────────────────────────────────────────────────────
+
+function AiEngineTab() {
+  const [config, setConfig] = useState<AiEngineConfig | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [keyInput, setKeyInput] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<"ok" | "fail" | null>(null);
+  const [testDetail, setTestDetail] = useState<string | null>(null);
+
+  async function load() {
+    setLoading(true);
+    try {
+      const c = await getAiEngineConfig();
+      setConfig(c);
+    } catch {
+      /* ignore — API may not be ready yet */
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { load(); }, []);
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setSaveMsg(null);
+    setSaveError(null);
+    setTestResult(null);
+    try {
+      const updated = await saveAiEngineConfig({
+        openrouter_api_key: keyInput || undefined,
+      });
+      setConfig(updated);
+      setKeyInput("");
+      setSaveMsg("✓ Đã lưu. Tải lại trang để áp dụng.");
+    } catch (err) {
+      setSaveError(String(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleTest() {
+    const keyToTest = keyInput.trim() || "";
+    if (!keyToTest) {
+      setTestResult("fail");
+      setTestDetail("Nhập OpenRouter API Key trước khi test.");
+      return;
+    }
+    setTesting(true);
+    setTestResult(null);
+    setTestDetail(null);
+    try {
+      await testOpenRouterKey(keyToTest);
+      setTestResult("ok");
+    } catch (err) {
+      setTestResult("fail");
+      setTestDetail(String(err).replace(/^Error:\s*/, ""));
+    } finally {
+      setTesting(false);
+    }
+  }
+
+  if (loading) {
+    return <p className="text-neutral-500 text-sm">Đang tải...</p>;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Info */}
+      <div className="rounded-2xl border border-neutral-800 bg-neutral-900/40 p-4 text-sm text-neutral-400 space-y-1">
+        <p className="font-medium text-neutral-300">OpenRouter API Key</p>
+        <p>
+          OpenRouter cung cấp quyền truy cập vào nhiều mô hình AI (GPT-4o, Claude, Gemini…)
+          để hỗ trợ tính năng tạo script và cải thiện nội dung.
+        </p>
+        <p>
+          Lấy key tại{" "}
+          <a
+            href="https://openrouter.ai/keys"
+            target="_blank"
+            rel="noreferrer"
+            className="text-blue-400 hover:underline"
+          >
+            openrouter.ai/keys
+          </a>
+          {" "}→ Create Key → đặt tên <em>KOL Studio</em>.
+        </p>
+      </div>
+
+      {/* Current status */}
+      {config && (
+        <div className="flex items-center gap-2 text-sm">
+          <span
+            className={[
+              "inline-block h-2 w-2 rounded-full",
+              config.has_openrouter_api_key ? "bg-green-400" : "bg-neutral-600",
+            ].join(" ")}
+          />
+          {config.has_openrouter_api_key ? (
+            <span className="text-green-400">
+              Key đang hoạt động:{" "}
+              <code className="text-neutral-300">{config.openrouter_api_key_masked}</code>
+            </span>
+          ) : (
+            <span className="text-yellow-400">Chưa có API Key. Nhập và lưu bên dưới.</span>
+          )}
+        </div>
+      )}
+
+      {/* Form */}
+      <form onSubmit={handleSave} className="rounded-2xl border border-neutral-700 bg-neutral-900 p-5 space-y-4">
+        <h2 className="text-base font-semibold">Cập nhật OpenRouter API Key</h2>
+
+        <Field label="OpenRouter API Key">
+          <input
+            type="password"
+            value={keyInput}
+            onChange={(e) => {
+              setKeyInput(e.target.value);
+              setTestResult(null);
+            }}
+            placeholder="sk-or-v1-..."
+            className="w-full rounded-xl bg-neutral-800 border border-neutral-700 px-3 py-2 text-sm font-mono focus:outline-none focus:border-neutral-500"
+          />
+        </Field>
+
+        {/* Test result */}
+        {testResult === "ok" && (
+          <p className="text-green-400 text-sm">✓ Key hợp lệ — sẵn sàng tạo video!</p>
+        )}
+        {testResult === "fail" && (
+          <p className="text-red-400 text-sm">✗ {testDetail || "Key không hợp lệ."}</p>
+        )}
+        {saveMsg && <p className="text-green-400 text-sm">{saveMsg}</p>}
+        {saveError && <p className="text-red-400 text-sm">{saveError}</p>}
+
+        <div className="flex gap-3 flex-wrap">
+          <button
+            type="submit"
+            disabled={saving || !keyInput.trim()}
+            className="rounded-xl bg-white text-black px-5 py-2 text-sm font-semibold hover:bg-neutral-200 transition disabled:opacity-50"
+          >
+            {saving ? "Đang lưu..." : "Save & Reload"}
+          </button>
+          <button
+            type="button"
+            onClick={handleTest}
+            disabled={testing || !keyInput.trim()}
+            className="rounded-xl border border-neutral-700 px-5 py-2 text-sm font-medium hover:border-neutral-500 transition disabled:opacity-50"
+          >
+            {testing ? "Đang kiểm tra..." : "Test API Key"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (

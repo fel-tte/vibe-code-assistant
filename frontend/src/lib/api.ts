@@ -1168,3 +1168,41 @@ export async function deleteGoogleAccount(id: string): Promise<{ deleted: boolea
     await fetch(`${API_BASE}/api/v1/google-accounts/${id}`, { method: "DELETE" })
   );
 }
+
+// ─── AI Engine Config ────────────────────────────────────────────────────────
+
+export interface AiEngineConfig {
+  has_openrouter_api_key: boolean;
+  openrouter_api_key_masked: string | null;
+  default_model: string;
+  updated_at: string | null;
+}
+
+export async function getAiEngineConfig(): Promise<AiEngineConfig> {
+  return handle<AiEngineConfig>(
+    await fetch(`${API_BASE}/api/v1/ai-engine/config`, { cache: "no-store" })
+  );
+}
+
+export async function saveAiEngineConfig(payload: {
+  openrouter_api_key?: string;
+  default_model?: string;
+}): Promise<AiEngineConfig> {
+  return handle<AiEngineConfig>(
+    await fetch(`${API_BASE}/api/v1/ai-engine/config`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+  );
+}
+
+export async function testOpenRouterKey(api_key: string): Promise<{ ok: boolean }> {
+  return handle<{ ok: boolean }>(
+    await fetch(`${API_BASE}/api/v1/ai-engine/test-key`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ api_key }),
+    })
+  );
+}
