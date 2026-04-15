@@ -34,12 +34,12 @@ def test_ingress_signature_rejects_replay():
     )
 
 
-def test_resolve_ingress_secret_prefers_provider_specific(monkeypatch):
+def test_resolve_ingress_secret_prefers_veo_specific(monkeypatch):
     monkeypatch.setenv("PROVIDER_RELAY_SHARED_SECRET", "generic")
-    monkeypatch.setenv("RUNWAY_RELAY_SHARED_SECRET", "runway-secret")
+    monkeypatch.setenv("VEO_RELAY_SHARED_SECRET", "veo-secret")
     from importlib import reload
     import app.core.config as config_module
     reload(config_module)
     import app.services.provider_ingress_signing as ingress_module
     reload(ingress_module)
-    assert ingress_module.resolve_ingress_secret("runway") == "runway-secret"
+    assert ingress_module.resolve_ingress_secret("veo") == "veo-secret"

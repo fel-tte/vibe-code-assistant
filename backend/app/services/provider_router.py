@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 from app.providers.base import BaseVideoProviderAdapter
-from app.providers.kling.adapter import KlingAdapter
-from app.providers.runway.adapter import RunwayAdapter
 from app.providers.veo.adapter import VeoAdapter
 from app.schemas.provider_common import (
     NormalizedCallbackEvent,
@@ -23,10 +21,6 @@ def get_provider_adapter(provider: str) -> BaseVideoProviderAdapter:
 
     if provider_key == "veo":
         adapter: BaseVideoProviderAdapter = VeoAdapter()
-    elif provider_key == "runway":
-        adapter = RunwayAdapter()
-    elif provider_key == "kling":
-        adapter = KlingAdapter()
     else:
         raise ValueError(f"Unsupported provider: {provider}")
 

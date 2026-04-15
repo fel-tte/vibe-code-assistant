@@ -12,32 +12,21 @@ async def poll_scene_task(
     provider_operation_name: str | None,
 ) -> NormalizedStatusResult:
     """
-    Poll provider trạng thái scene task theo normalized contract.
+    Poll Veo trạng thái scene task theo normalized contract.
 
     Quy ước:
-    - Veo thường dùng provider_operation_name
-    - Runway/Kling thường dùng provider_task_id
+    - Veo dùng provider_operation_name
     - Kết quả luôn trả về NormalizedStatusResult
     - Nếu provider query lỗi, trả về state='failed' để worker quyết định xử lý tiếp
     """
     normalized_provider = normalize_provider_name(provider)
 
-    if normalized_provider == "veo" and not provider_operation_name:
+    if not provider_operation_name:
         return NormalizedStatusResult(
             provider=normalized_provider,
             state="failed",
             error_message="Missing provider_operation_name for Veo poll",
             failure_code="MISSING_PROVIDER_OPERATION_NAME",
-            failure_category="orchestration",
-            raw_response=None,
-        )
-
-    if normalized_provider in {"runway", "kling"} and not provider_task_id:
-        return NormalizedStatusResult(
-            provider=normalized_provider,
-            state="failed",
-            error_message=f"Missing provider_task_id for {normalized_provider} poll",
-            failure_code="MISSING_PROVIDER_TASK_ID",
             failure_category="orchestration",
             raw_response=None,
         )

@@ -41,7 +41,7 @@ def trigger_project_render(db: Session, project_id: str) -> dict:
             "sound_generation": veo_config.get("sound_generation", False),
             "provider_model": veo_config.get("provider_model"),
         })
-    job = create_render_job_with_scenes(db, project_id=project_id, provider=project.get("provider","runway"), aspect_ratio=project.get("format","9:16"), style_preset=project.get("style_preset"), subtitle_mode="burn", planned_scenes=planned_scenes)
+    job = create_render_job_with_scenes(db, project_id=project_id, provider=project.get("provider","veo"), aspect_ratio=project.get("format","9:16"), style_preset=project.get("style_preset"), subtitle_mode="burn", planned_scenes=planned_scenes)
     enqueue_render_dispatch(job.id)
     project["status"]="render_queued"; project["render_job_id"]=job.id; project.setdefault("is_template_source", True); project.setdefault("template_extracted", False)
     save_project(project)

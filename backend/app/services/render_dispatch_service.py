@@ -63,17 +63,11 @@ def _resolve_duration_seconds(raw: dict[str, Any], provider: str) -> int:
 
     normalized_provider = normalize_provider_name(provider)
 
-    # provider-aware guardrails
+    # provider-aware guardrails for Veo: keep on short validated duration buckets
     if normalized_provider == "veo":
-        # current project policy: keep Veo on short validated buckets
         allowed = {4, 6, 8}
         if duration not in allowed:
             duration = 4 if duration <= 4 else 6 if duration <= 6 else 8
-    elif normalized_provider in {"runway", "kling"}:
-        if duration < 1:
-            duration = 1
-        if duration > 60:
-            duration = 60
 
     return duration
 
@@ -107,8 +101,6 @@ def _resolve_metadata(raw: dict[str, Any], provider: str) -> dict[str, Any]:
 # =========================
 _PROVIDER_DEFAULT_MODELS: dict[str, str] = {
     "veo": "veo_default_model",
-    "runway": "runway_default_model",
-    "kling": "kling_default_model",
 }
 
 

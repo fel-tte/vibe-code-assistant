@@ -8,7 +8,7 @@ from app.services.provider_scene_planner import plan_provider_scenes
 from app.services.render_provider_registry import get_provider_capabilities
 
 
-RenderProvider = Literal["veo_3_1", "runway_gen4", "kling_3"]
+RenderProvider = Literal["veo_3_1"]
 
 
 class PrepareRenderPlanRequest(BaseModel):

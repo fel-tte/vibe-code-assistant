@@ -34,7 +34,7 @@ def test_autopilot_executes_safe_decisions_and_records_state():
             RenderJob(
                 id=f"job-{idx}",
                 project_id=f"proj-{idx}",
-                provider="runway",
+                provider="veo",
                 status="queued",
                 planned_scene_count=1,
                 completed_scene_count=0,
@@ -48,7 +48,7 @@ def test_autopilot_executes_safe_decisions_and_records_state():
                 job_id="job-0",
                 scene_index=idx,
                 title=f"Scene {idx}",
-                provider="runway",
+                provider="veo",
                 status="failed",
                 request_payload_json="{}",
             )
@@ -59,7 +59,7 @@ def test_autopilot_executes_safe_decisions_and_records_state():
             incident_key="job-0:health_failed",
             job_id="job-0",
             project_id="proj-0",
-            provider="runway",
+            provider="veo",
             incident_family="health_failed",
             current_event_id="evt-1",
             current_event_type="job_health_failed",
@@ -108,7 +108,7 @@ def test_provider_override_expiry_policy_rolls_back_expired_override():
     db.add(
         ProviderRoutingOverride(
             id="override-1",
-            source_provider="runway",
+            source_provider="veo",
             target_provider="veo",
             active=True,
             reason="temporary failover",
@@ -119,7 +119,7 @@ def test_provider_override_expiry_policy_rolls_back_expired_override():
     db.commit()
 
     actions = run_provider_override_expiry_policy(db, actor="autopilot-bot", now=datetime.now(timezone.utc).replace(tzinfo=None))
-    row = db.query(ProviderRoutingOverride).filter_by(source_provider="runway").first()
+    row = db.query(ProviderRoutingOverride).filter_by(source_provider="veo").first()
 
     assert actions
     assert row is not None

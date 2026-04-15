@@ -482,7 +482,7 @@ def execute_decision(
 
 
 def _fallback_provider(source_provider: str) -> str:
-    options = ["runway", "veo", "kling"]
+    options = ["veo"]
     for option in options:
         if option != source_provider:
             return option

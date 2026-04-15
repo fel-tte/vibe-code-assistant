@@ -67,6 +67,4 @@ def get_provider_client(provider_name: str) -> ProviderClientProtocol:
     # Tạm thời route hết về mock cho local/dev.
     # Sau này thay bằng:
     # if normalized in {"veo", "veo_3", "veo_3_1"}: return VeoProviderClient(...)
-    # if normalized == "runway": return RunwayProviderClient(...)
-    # if normalized == "kling": return KlingProviderClient(...)
     return MockProviderClient()
