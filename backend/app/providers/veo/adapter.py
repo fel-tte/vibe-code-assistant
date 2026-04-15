@@ -45,15 +45,16 @@ class VeoAdapter(BaseVideoProviderAdapter):
     def _gemini_query_url(self, operation_name: str) -> str:
         return f"https://generativelanguage.googleapis.com/v1beta/{operation_name.lstrip('/')}"
 
-    def _gemini_headers(self) -> dict[str, str]:
-        if not settings.gemini_api_key:
+    def _gemini_headers(self, api_key: str | None = None) -> dict[str, str]:
+        key = api_key or settings.gemini_api_key
+        if not key:
             raise ProviderConfigError("GEMINI_API_KEY is required when GOOGLE_GENAI_USE_VERTEX=false")
         return {
-            "x-goog-api-key": settings.gemini_api_key,
+            "x-goog-api-key": key,
             "Content-Type": "application/json",
         }
 
-    def _vertex_headers(self) -> dict[str, str]:
+    def _vertex_headers(self, service_account_info: dict | None = None) -> dict[str, str]:
         try:
             import google.auth
             from google.auth.transport.requests import Request
@@ -61,26 +62,35 @@ class VeoAdapter(BaseVideoProviderAdapter):
             raise ProviderConfigError(f"google-auth is required for Vertex transport: {exc}") from exc
 
         scopes = ["https://www.googleapis.com/auth/cloud-platform"]
-        credentials, _ = google.auth.default(scopes=scopes)
+        if service_account_info:
+            try:
+                from google.oauth2 import service_account as sa_module
+                credentials = sa_module.Credentials.from_service_account_info(
+                    service_account_info, scopes=scopes
+                )
+            except Exception as exc:
+                raise ProviderConfigError(f"Invalid service account JSON: {exc}") from exc
+        else:
+            credentials, _ = google.auth.default(scopes=scopes)
         credentials.refresh(Request())
         return {
             "Authorization": f"Bearer {credentials.token}",
             "Content-Type": "application/json; charset=utf-8",
         }
 
-    def _vertex_submit_url(self, model: str) -> str:
-        if not settings.google_cloud_project:
+    def _vertex_submit_url(self, model: str, project: str | None = None, location: str | None = None) -> str:
+        proj = project or settings.google_cloud_project
+        if not proj:
             raise ProviderConfigError("GOOGLE_CLOUD_PROJECT is required for Vertex Veo")
-        location = settings.google_cloud_location
-        project = settings.google_cloud_project
-        return f"https://{location}-aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/publishers/google/models/{model}:predictLongRunning"
+        loc = location or settings.google_cloud_location
+        return f"https://{loc}-aiplatform.googleapis.com/v1/projects/{proj}/locations/{loc}/publishers/google/models/{model}:predictLongRunning"
 
-    def _vertex_query_url(self, model: str) -> str:
-        if not settings.google_cloud_project:
+    def _vertex_query_url(self, model: str, project: str | None = None, location: str | None = None) -> str:
+        proj = project or settings.google_cloud_project
+        if not proj:
             raise ProviderConfigError("GOOGLE_CLOUD_PROJECT is required for Vertex Veo")
-        location = settings.google_cloud_location
-        project = settings.google_cloud_project
-        return f"https://{location}-aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/publishers/google/models/{model}:fetchPredictOperation"
+        loc = location or settings.google_cloud_location
+        return f"https://{loc}-aiplatform.googleapis.com/v1/projects/{proj}/locations/{loc}/publishers/google/models/{model}:fetchPredictOperation"
 
     def _build_instance(self, scene_payload: dict[str, Any]) -> dict[str, Any]:
         mode = self._veo_mode(scene_payload)
@@ -114,15 +124,37 @@ class VeoAdapter(BaseVideoProviderAdapter):
             params["resolution"] = resolution
         if settings.veo_output_gcs_uri:
             params["storageUri"] = settings.veo_output_gcs_uri
+        elif scene_payload.get("_cred_gcs_output_uri"):
+            params["storageUri"] = scene_payload["_cred_gcs_output_uri"]
         if mode == "reference_image_to_video" and settings.veo_reference_preview_model:
             params["previewReferenceMode"] = True
         if scene_payload.get("sound_generation"):
             params["generateAudio"] = True
         return params
 
-    async def submit(self, scene_payload: dict, callback_url: str | None) -> NormalizedSubmitResult:
+    async def submit(
+        self,
+        scene_payload: dict,
+        callback_url: str | None,
+        cred_override: dict | None = None,
+    ) -> NormalizedSubmitResult:
+        """Submit a video generation request.
+
+        ``cred_override`` may contain keys: ``gemini_api_key``,
+        ``google_cloud_project``, ``google_cloud_location``,
+        ``gcs_output_uri``, ``use_vertex``.  When provided, these take
+        precedence over global ``settings`` values so that multiple
+        Google accounts can be used in round-robin rotation.
+        """
+        cred = cred_override or {}
+        use_vertex = cred.get("use_vertex", settings.google_genai_use_vertex)
+        gemini_key = cred.get("gemini_api_key") or settings.gemini_api_key
+        gcp_project = cred.get("google_cloud_project") or settings.google_cloud_project
+        gcp_location = cred.get("google_cloud_location") or settings.google_cloud_location
+        gcs_uri = cred.get("gcs_output_uri") or settings.veo_output_gcs_uri
+
         model = str(scene_payload.get("provider_model") or self._model(scene_payload))
-        if provider_mock_enabled() and not settings.gemini_api_key and not settings.google_cloud_project:
+        if provider_mock_enabled() and not gemini_key and not gcp_project:
             return mock_submit_result(
                 provider=self.provider_name,
                 model=model,
@@ -131,15 +163,19 @@ class VeoAdapter(BaseVideoProviderAdapter):
                 reason="No Veo credentials configured; using mock fallback",
             )
 
+        build_params_payload = dict(scene_payload)
+        if gcs_uri:
+            build_params_payload["_cred_gcs_output_uri"] = gcs_uri
+
         body = {
             "instances": [self._build_instance(scene_payload)],
-            "parameters": self._build_parameters(scene_payload),
+            "parameters": self._build_parameters(build_params_payload),
         }
 
-        if settings.google_genai_use_vertex:
+        if use_vertex:
             data = await request_json(
                 method="POST",
-                url=self._vertex_submit_url(model),
+                url=self._vertex_submit_url(model, project=gcp_project, location=gcp_location),
                 headers=self._vertex_headers(),
                 json_body=body,
             )
@@ -147,7 +183,7 @@ class VeoAdapter(BaseVideoProviderAdapter):
             data = await request_json(
                 method="POST",
                 url=self._gemini_submit_url(model),
-                headers=self._gemini_headers(),
+                headers=self._gemini_headers(api_key=gemini_key),
                 json_body=body,
             )
 
@@ -163,17 +199,29 @@ class VeoAdapter(BaseVideoProviderAdapter):
             error_message=None if operation_name else "Veo did not return an operation name",
         )
 
-    async def query(self, *, provider_task_id: str | None, provider_operation_name: str | None) -> NormalizedStatusResult:
+    async def query(
+        self,
+        *,
+        provider_task_id: str | None,
+        provider_operation_name: str | None,
+        cred_override: dict | None = None,
+    ) -> NormalizedStatusResult:
         if provider_operation_name and provider_operation_name.startswith("operations/veo-mock-"):
             return mock_query_result(self.provider_name)
         if not provider_operation_name:
             raise ProviderConfigError("provider_operation_name is required for Veo polling")
 
-        if settings.google_genai_use_vertex:
+        cred = cred_override or {}
+        use_vertex = cred.get("use_vertex", settings.google_genai_use_vertex)
+        gemini_key = cred.get("gemini_api_key") or settings.gemini_api_key
+        gcp_project = cred.get("google_cloud_project") or settings.google_cloud_project
+        gcp_location = cred.get("google_cloud_location") or settings.google_cloud_location
+
+        if use_vertex:
             model = provider_operation_name.split("/models/")[1].split("/operations/")[0] if "/models/" in provider_operation_name else settings.veo_default_model
             data = await request_json(
                 method="POST",
-                url=self._vertex_query_url(model),
+                url=self._vertex_query_url(model, project=gcp_project, location=gcp_location),
                 headers=self._vertex_headers(),
                 json_body={"operationName": provider_operation_name},
             )
@@ -181,7 +229,7 @@ class VeoAdapter(BaseVideoProviderAdapter):
             data = await request_json(
                 method="GET",
                 url=self._gemini_query_url(provider_operation_name),
-                headers=self._gemini_headers(),
+                headers=self._gemini_headers(api_key=gemini_key),
             )
 
         done = bool(data.get("done"))

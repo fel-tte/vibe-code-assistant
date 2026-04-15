@@ -22,7 +22,7 @@ class ProviderClientProtocol(Protocol):
 class MockProviderClient:
     """
     Mock production-safe client để pipeline chạy kín local/dev.
-    Có thể thay bằng Veo / Runway / Kling thật sau.
+    Có thể thay bằng VeoProviderClient thật sau.
     """
 
     async def dispatch_scene(self, *, job: Any, scene_task: Any) -> dict[str, Any]:
@@ -67,6 +67,4 @@ def get_provider_client(provider_name: str) -> ProviderClientProtocol:
     # Tạm thời route hết về mock cho local/dev.
     # Sau này thay bằng:
     # if normalized in {"veo", "veo_3", "veo_3_1"}: return VeoProviderClient(...)
-    # if normalized == "runway": return RunwayProviderClient(...)
-    # if normalized == "kling": return KlingProviderClient(...)
     return MockProviderClient()

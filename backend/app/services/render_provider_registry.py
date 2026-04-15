@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 
-RenderProvider = Literal["veo_3_1", "runway_gen4", "kling_3"]
+RenderProvider = Literal["veo_3_1"]
 
 
 @dataclass(frozen=True)
@@ -27,24 +27,6 @@ PROVIDER_CAPABILITIES: dict[RenderProvider, ProviderCapabilities] = {
         supports_native_audio=True,
         supports_multi_shot_prompt=False,
         recommended_mode="cinematic_single_shot",
-    ),
-    "runway_gen4": ProviderCapabilities(
-        provider="runway_gen4",
-        label="Runway Gen-4",
-        default_scene_duration_sec=5.0,
-        max_scene_duration_sec=10.0,
-        supports_native_audio=False,
-        supports_multi_shot_prompt=False,
-        recommended_mode="image_plus_motion_control",
-    ),
-    "kling_3": ProviderCapabilities(
-        provider="kling_3",
-        label="Kling 3",
-        default_scene_duration_sec=5.0,
-        max_scene_duration_sec=15.0,
-        supports_native_audio=False,
-        supports_multi_shot_prompt=True,
-        recommended_mode="multi_shot_storyboard",
     ),
 }
 

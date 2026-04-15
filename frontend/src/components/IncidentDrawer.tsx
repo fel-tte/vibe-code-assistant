@@ -105,7 +105,7 @@ export default function IncidentDrawer({
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${statusTone(incident.current_status || incident.event_type)}`}>{incident.current_status || incident.event_type}</span>
+        <span data-testid="incident-current-status" className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${statusTone(incident.current_status || incident.event_type)}`}>{incident.current_status || incident.event_type}</span>
         <span className="inline-flex rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] text-white/70">workflow: {incident.workflow_status || "open"}</span>
         {incident.acknowledged ? <Badge tone="emerald" label="acknowledged" /> : null}
         {incident.muted ? <Badge tone="amber" label="muted" /> : null}
@@ -139,14 +139,14 @@ export default function IncidentDrawer({
       </Block>
 
       <Block title="Operator action">
-        <label className="block text-xs text-white/50">Actor<input value={actor} onChange={(e) => onActorChange(e.target.value)} className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" /></label>
-        <label className="mt-3 block text-xs text-white/50">Assign to<input value={assignee} onChange={(e) => onAssigneeChange(e.target.value)} className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" /></label>
-        <label className="mt-3 block text-xs text-white/50">Action reason<textarea value={actionReason} onChange={(e) => onActionReasonChange(e.target.value)} placeholder="Reason sent to backend." className="mt-1 min-h-[84px] w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white outline-none placeholder:text-white/25" /></label>
+        <label className="block text-xs text-white/50">Actor<input data-testid="incident-actor-input" value={actor} onChange={(e) => onActorChange(e.target.value)} className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" /></label>
+        <label className="mt-3 block text-xs text-white/50">Assign to<input data-testid="incident-assignee-input" value={assignee} onChange={(e) => onAssigneeChange(e.target.value)} className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" /></label>
+        <label className="mt-3 block text-xs text-white/50">Action reason<textarea data-testid="incident-action-reason-input" value={actionReason} onChange={(e) => onActionReasonChange(e.target.value)} placeholder="Reason sent to backend." className="mt-1 min-h-[84px] w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white outline-none placeholder:text-white/25" /></label>
         <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          <ActionButton label="Ack" onClick={onAcknowledge} loading={loadingAction === "ack"} />
-          <ActionButton label="Assign" onClick={onAssign} loading={loadingAction === "assign"} />
-          <ActionButton label="Mute 1h" onClick={onMute} loading={loadingAction === "mute"} />
-          {isResolved ? <ActionButton label="Reopen" onClick={onReopen} loading={loadingAction === "reopen"} tone="success" /> : <ActionButton label="Resolve" onClick={onResolve} loading={loadingAction === "resolve"} tone="danger" />}
+          <ActionButton testId="incident-action-ack" label="Ack" onClick={onAcknowledge} loading={loadingAction === "ack"} />
+          <ActionButton testId="incident-action-assign" label="Assign" onClick={onAssign} loading={loadingAction === "assign"} />
+          <ActionButton testId="incident-action-mute" label="Mute 1h" onClick={onMute} loading={loadingAction === "mute"} />
+          {isResolved ? <ActionButton testId="incident-action-reopen" label="Reopen" onClick={onReopen} loading={loadingAction === "reopen"} tone="success" /> : <ActionButton testId="incident-action-resolve" label="Resolve" onClick={onResolve} loading={loadingAction === "resolve"} tone="danger" />}
         </div>
       </Block>
 

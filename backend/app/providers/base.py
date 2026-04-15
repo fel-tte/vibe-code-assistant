@@ -14,7 +14,7 @@ class BaseVideoProviderAdapter(ABC):
     Interface chuẩn cho mọi video provider adapter.
 
     Mục tiêu:
-    - ép toàn bộ Veo / Runway / Kling trả về cùng một normalized contract
+    - ép toàn bộ provider trả về cùng một normalized contract
     - giữ provider_router.py, dispatch/poll services, callback route
       không phụ thuộc vào provider-specific response shapes
     """
@@ -51,7 +51,6 @@ class BaseVideoProviderAdapter(ABC):
 
         Quy ước:
         - Veo thường dùng provider_operation_name
-        - Runway / Kling thường dùng provider_task_id
 
         Output:
         - NormalizedStatusResult

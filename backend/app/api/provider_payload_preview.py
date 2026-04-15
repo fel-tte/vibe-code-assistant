@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from app.services.provider_adapters.batch_builder import build_render_payloads
 
 
-RenderProvider = Literal["veo_3_1", "runway_gen4_turbo", "kling_text", "kling_image"]
+RenderProvider = Literal["veo_3_1"]
 
 
 class BuildProviderPayloadsRequest(BaseModel):

@@ -45,8 +45,8 @@ def build_job_payload(provider: str, aspect_ratio: str, prompt_text: str) -> dic
                 "scene_index": 1,
                 "title": "Smoke scene 1",
                 "script_text": prompt_text,
-                "provider_target_duration_sec": 4 if provider == "veo" else 5,
-                "target_duration_sec": 4 if provider == "veo" else 5,
+                "provider_target_duration_sec": 4,
+                "target_duration_sec": 4,
                 "visual_prompt": prompt_text,
             }
         ],
@@ -115,31 +115,9 @@ def build_relay_signature(secret: str, raw_body: bytes) -> tuple[str, str]:
 
 
 def build_success_callback(provider: str, scene: dict[str, Any], job: dict[str, Any], asset_url: str) -> dict[str, Any]:
-    provider_task_id = scene.get("provider_task_id")
     provider_operation_name = scene.get("provider_operation_name")
     job_id = job.get("job_id")
 
-    if provider == "runway":
-        return {
-            "id": f"evt-{job_id}",
-            "taskId": provider_task_id,
-            "status": "SUCCEEDED",
-            "outputUrl": asset_url,
-            "thumbnailUrl": asset_url + ".jpg",
-            "event": "task.completed",
-        }
-    if provider == "kling":
-        return {
-            "request_id": f"evt-{job_id}",
-            "data": {
-                "task_id": provider_task_id,
-                "task_status": "succeed",
-                "task_result": {
-                    "videos": [{"url": asset_url, "cover_url": asset_url + ".jpg"}]
-                },
-            },
-            "event": "kling.task.completed",
-        }
     return {
         "name": provider_operation_name or f"operations/{job_id}",
         "done": True,
@@ -173,7 +151,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Live E2E smoke runner for render provider pipeline")
     parser.add_argument("--backend-base-url", default="http://localhost:8000")
     parser.add_argument("--frontend-base-url", default="http://localhost:3000")
-    parser.add_argument("--provider", choices=["runway", "veo", "kling"], required=True)
+    parser.add_argument("--provider", choices=["veo"], required=True)
     parser.add_argument("--delivery-mode", choices=["poll", "direct-callback", "relay-callback", "edge-callback"], default="relay-callback")
     parser.add_argument("--timeout-seconds", type=int, default=180)
     parser.add_argument("--aspect-ratio", default="16:9")

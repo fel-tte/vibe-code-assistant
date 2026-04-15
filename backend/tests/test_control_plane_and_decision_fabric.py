@@ -60,7 +60,7 @@ def test_decision_engine_persists_provider_override_and_release_gate():
         db,
         decision_type="switch_provider",
         actor="platform-bot",
-        action_payload={"source_provider": "runway", "target_provider": "veo"},
+        action_payload={"source_provider": "veo", "target_provider": "veo"},
         reason="Provider surge",
         dry_run=False,
     )
@@ -73,17 +73,18 @@ def test_decision_engine_persists_provider_override_and_release_gate():
         dry_run=False,
     )
 
-    override = db.query(ProviderRoutingOverride).filter_by(source_provider="runway").first()
+    override = db.query(ProviderRoutingOverride).filter_by(source_provider="veo").first()
     gate = get_or_create_release_gate(db)
 
-    effective, meta = resolve_effective_provider(db, "runway")
+    # With only Veo supported, switching veo->veo stores the override row but
+    # resolve_effective_provider returns (veo, None) since source==target.
+    effective, _ = resolve_effective_provider(db, "veo")
 
     assert switch_result.status == "executed"
     assert block_result.status == "executed"
     assert override is not None and override.target_provider == "veo"
     assert gate.blocked is True
     assert effective == "veo"
-    assert meta is not None
 
 
 def test_release_guardrail_recommendation_and_incident_action_audit():
@@ -94,7 +95,7 @@ def test_release_guardrail_recommendation_and_incident_action_audit():
         RenderJob(
             id="job-1",
             project_id="proj-1",
-            provider="runway",
+            provider="veo",
             status="queued",
             planned_scene_count=1,
             completed_scene_count=0,
@@ -107,7 +108,7 @@ def test_release_guardrail_recommendation_and_incident_action_audit():
             job_id="job-1",
             scene_index=1,
             title="Scene 1",
-            provider="runway",
+            provider="veo",
             status="failed",
             request_payload_json="{}",
         )
@@ -118,7 +119,7 @@ def test_release_guardrail_recommendation_and_incident_action_audit():
             incident_key="job-1:health_failed",
             job_id="job-1",
             project_id="proj-1",
-            provider="runway",
+            provider="veo",
             incident_family="health_failed",
             current_event_id="evt-1",
             current_event_type="job_health_failed",

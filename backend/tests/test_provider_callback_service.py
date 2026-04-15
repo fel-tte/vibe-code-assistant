@@ -63,7 +63,7 @@ def test_ingest_provider_callback_resolves_scene_and_marks_success(monkeypatch):
 
     result = svc.ingest_provider_callback(
         db,
-        provider="runway",
+        provider="veo",
         headers={},
         raw_body=b'{"id":"evt-1"}',
         payload={"id": "evt-1", "taskId": "task-123"},

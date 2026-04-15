@@ -31,6 +31,8 @@ from app.api.template_runtime import router as template_runtime_router
 from app.api.veo_workspace import router as veo_workspace_router
 from app.api.template_extraction import router as template_extraction_router
 from app.api.template_governance_scheduling import router as template_governance_scheduling_router
+from app.api.google_accounts import router as google_accounts_router
+from app.api.ai_engine import router as ai_engine_router
 from app.core.config import settings
 from app.services.project_workspace_service import PROJECT_STORAGE_DIR
 
@@ -49,6 +51,7 @@ app.add_middleware(
         "http://localhost:5173",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
+        "http://frontend:3000",
         settings.public_base_url.rstrip("/"),
     ],
     allow_credentials=True,
@@ -87,6 +90,8 @@ app.include_router(template_runtime_router)
 app.include_router(veo_workspace_router)
 app.include_router(template_extraction_router)
 app.include_router(template_governance_scheduling_router)
+app.include_router(google_accounts_router)
+app.include_router(ai_engine_router)
 
 
 @app.get("/", tags=["root"])

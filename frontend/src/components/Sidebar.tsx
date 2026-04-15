@@ -25,6 +25,11 @@ const navItems: NavItem[] = [
     href: "/render-jobs",
     description: "Track render pipelines, scene task progress, and final preview output",
   },
+  {
+    label: "Settings",
+    href: "/settings",
+    description: "Manage Google AI accounts, account rotation, and AI engine config",
+  },
 ];
 
 export default function Sidebar() {

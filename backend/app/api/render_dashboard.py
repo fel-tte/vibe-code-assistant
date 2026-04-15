@@ -287,7 +287,8 @@ async def assign_incident(incident_key: str, payload: IncidentActionRequest, db:
 
 @router.post("/incidents/{incident_key}/mute")
 async def mute_incident(incident_key: str, payload: IncidentActionRequest, db: Session = Depends(get_db)):
-    state = apply_incident_action(db, incident_key=incident_key, action_type="mute", actor=payload.actor, reason=payload.reason, payload={"muted_until": payload.muted_until})
+    muted_until_str = payload.muted_until.isoformat() if payload.muted_until else None
+    state = apply_incident_action(db, incident_key=incident_key, action_type="mute", actor=payload.actor, reason=payload.reason, payload={"muted_until": muted_until_str})
     if not state:
         raise HTTPException(status_code=404, detail="Incident not found")
     return {"ok": True, "incident_key": state.incident_key, "status": state.status, "muted_until": state.muted_until}

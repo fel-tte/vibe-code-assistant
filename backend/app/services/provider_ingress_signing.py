@@ -56,10 +56,6 @@ def verify_ingress_signature(
 
 def resolve_ingress_secret(provider: str) -> str | None:
     normalized = provider.strip().lower()
-    if normalized == "runway":
-        return settings.runway_relay_shared_secret or settings.provider_relay_shared_secret
-    if normalized == "kling":
-        return settings.kling_relay_shared_secret or settings.provider_relay_shared_secret
     if normalized == "veo":
         return settings.veo_relay_shared_secret or settings.provider_relay_shared_secret
     return settings.provider_relay_shared_secret

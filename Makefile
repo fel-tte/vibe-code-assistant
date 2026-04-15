@@ -1,4 +1,6 @@
-.PHONY: bootstrap up down logs backend-logs frontend-logs health test-backend tree smoke-sign-runway smoke-sign-kling smoke-sign-veo e2e-up e2e-test e2e-local e2e-down ci-e2e ci-report
+.PHONY: bootstrap up down logs backend-logs frontend-logs health test-backend tree smoke-sign-runway smoke-sign-kling smoke-sign-veo e2e-up e2e-test e2e-local e2e-down e2e-reset-state ci-e2e ci-report
+
+E2E_BACKEND_SCHEMA_BOOTSTRAP ?= metadata-create-all
 
 bootstrap:
 	cp backend/.env.example backend/.env.dev || true
@@ -42,14 +44,24 @@ smoke-sign-veo:
 
 
 e2e-up:
-	docker compose up --build -d postgres redis minio minio-init api worker beat flower frontend edge-relay
+	BACKEND_SCHEMA_BOOTSTRAP=$(E2E_BACKEND_SCHEMA_BOOTSTRAP) docker compose up --build -d postgres redis minio minio-init api worker beat flower frontend edge-relay
 
 e2e-test:
-	docker compose run --rm --profile e2e playwright
+	BACKEND_SCHEMA_BOOTSTRAP=$(E2E_BACKEND_SCHEMA_BOOTSTRAP) docker compose --profile e2e run --rm playwright
 
 e2e-local:
-	docker compose up --build -d postgres redis minio minio-init api worker beat flower frontend edge-relay
-	docker compose run --rm --profile e2e playwright
+	BACKEND_SCHEMA_BOOTSTRAP=$(E2E_BACKEND_SCHEMA_BOOTSTRAP) docker compose up --build -d postgres redis minio minio-init api worker beat flower frontend edge-relay
+	BACKEND_SCHEMA_BOOTSTRAP=$(E2E_BACKEND_SCHEMA_BOOTSTRAP) docker compose --profile e2e run --rm playwright
+
+e2e-reset-state:
+	curl -fsS -X POST http://localhost:8000/api/v1/observability/kill-switch \
+		-H 'Content-Type: application/json' \
+		--data '{"actor":"local-e2e-reset","enabled":false,"reason":"Reset for local E2E rerun"}' && echo
+	curl -fsS -X POST http://localhost:8000/api/v1/control-plane/release-gate \
+		-H 'Content-Type: application/json' \
+		--data '{"actor":"local-e2e-reset","blocked":false,"reason":"Reset for local E2E rerun","source":"local-e2e-reset"}' && echo
+	docker compose exec -T postgres psql -U postgres -d render_factory -c "TRUNCATE TABLE render_incident_bulk_action_items, render_incident_bulk_action_runs, render_incident_saved_views, render_incident_actions, render_incident_states, provider_webhook_events, render_timeline_events, render_job_summaries, render_scene_tasks, render_jobs, decision_execution_audit_logs RESTART IDENTITY CASCADE;"
+	docker compose exec -T api sh -lc 'rm -rf /app/storage/render_cache/* /app/storage/render_outputs/*'
 
 e2e-down:
 	docker compose down -v
@@ -60,7 +72,7 @@ ci-e2e:
 	docker compose config
 	docker compose up --build -d postgres redis minio minio-init api worker beat flower frontend edge-relay
 	python scripts/ci/wait_for_stack.py 300
-	docker compose run --rm --profile e2e playwright || (python scripts/ci/export_fail_fast_report.py && exit 1)
+	docker compose --profile e2e run --rm playwright || (python scripts/ci/export_fail_fast_report.py && exit 1)
 	python scripts/ci/export_fail_fast_report.py
 
 ci-report:
@@ -77,7 +89,7 @@ ci-e2e-matrix:
 	    docker compose config; \
 	    docker compose up --build -d postgres redis minio minio-init api worker beat flower frontend edge-relay; \
 	    python scripts/ci/wait_for_stack.py 300; \
-	    docker compose run --rm --profile e2e \
+	    docker compose --profile e2e run --rm \
 	      -e E2E_PROVIDER=$$provider \
 	      -e E2E_DELIVERY_MODE=$$mode \
 	      -e ARTIFACT_SHARD=$${provider}-$${mode} \
