@@ -9,30 +9,14 @@ from app.schemas.provider_common import (
     NormalizedStatusResult,
     NormalizedSubmitResult,
 )
+from app.services.provider_normalize import normalize_provider_name
 
 
 _ADAPTER_CACHE: dict[str, BaseVideoProviderAdapter] = {}
 
 
-def _normalize_provider_name(provider: str) -> str:
-    value = provider.strip().lower()
-
-    aliases = {
-        "veo": "veo",
-        "veo_3": "veo",
-        "veo_3_1": "veo",
-        "google_veo": "veo",
-        "runway": "runway",
-        "runwayml": "runway",
-        "kling": "kling",
-        "klingai": "kling",
-    }
-
-    return aliases.get(value, value)
-
-
 def get_provider_adapter(provider: str) -> BaseVideoProviderAdapter:
-    provider_key = _normalize_provider_name(provider)
+    provider_key = normalize_provider_name(provider)
 
     if provider_key in _ADAPTER_CACHE:
         return _ADAPTER_CACHE[provider_key]
@@ -56,7 +40,7 @@ async def submit_render_task(
     scene_payload: dict,
     callback_url: str | None,
 ) -> NormalizedSubmitResult:
-    normalized_provider = _normalize_provider_name(provider)
+    normalized_provider = normalize_provider_name(provider)
 
     try:
         adapter = get_provider_adapter(normalized_provider)
@@ -94,7 +78,7 @@ async def query_render_task(
     provider_task_id: str | None,
     provider_operation_name: str | None,
 ) -> NormalizedStatusResult:
-    normalized_provider = _normalize_provider_name(provider)
+    normalized_provider = normalize_provider_name(provider)
 
     try:
         adapter = get_provider_adapter(normalized_provider)
@@ -136,7 +120,7 @@ def verify_render_callback(
     headers: dict[str, str],
     raw_body: bytes,
 ) -> bool:
-    normalized_provider = _normalize_provider_name(provider)
+    normalized_provider = normalize_provider_name(provider)
 
     try:
         adapter = get_provider_adapter(normalized_provider)
@@ -151,7 +135,7 @@ def normalize_render_callback(
     headers: dict[str, str],
     payload: dict,
 ) -> NormalizedCallbackEvent:
-    normalized_provider = _normalize_provider_name(provider)
+    normalized_provider = normalize_provider_name(provider)
 
     adapter = get_provider_adapter(normalized_provider)
     result = adapter.normalize_callback(headers, payload)

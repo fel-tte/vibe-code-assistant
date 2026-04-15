@@ -10,6 +10,7 @@ from app.db.session import get_db
 from app.services.render_queue import enqueue_render_dispatch
 from app.services.control_plane import get_or_create_release_gate
 from app.services.kill_switch import get_or_create_global_kill_switch
+from app.services.provider_normalize import normalize_provider_name
 from app.services.render_repository import (
     create_render_job_with_scenes,
     get_render_job_by_id,
@@ -173,24 +174,6 @@ class RenderJobCreateResponse(BaseModel):
 
 
 # =========================
-# Helpers
-# =========================
-def _normalize_provider_name(provider: str) -> str:
-    value = provider.strip().lower()
-    aliases = {
-        "veo": "veo",
-        "veo_3": "veo",
-        "veo_3_1": "veo",
-        "google_veo": "veo",
-        "runway": "runway",
-        "runwayml": "runway",
-        "kling": "kling",
-        "klingai": "kling",
-    }
-    return aliases.get(value, value)
-
-
-# =========================
 # Routes
 # =========================
 @router.post(
@@ -216,7 +199,7 @@ async def create_render_job(
             detail=f"Release gate is blocked: {release_gate.reason or 'blocked by control plane'}",
         )
 
-    normalized_provider = _normalize_provider_name(payload.provider)
+    normalized_provider = normalize_provider_name(payload.provider)
 
     planned_scenes = [
         scene.to_repository_payload(

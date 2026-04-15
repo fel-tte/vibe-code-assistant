@@ -1,24 +1,8 @@
 from __future__ import annotations
 
 from app.schemas.provider_common import NormalizedStatusResult
+from app.services.provider_normalize import normalize_provider_name
 from app.services.provider_router import query_render_task
-
-
-def _normalize_provider_name(provider: str) -> str:
-    value = provider.strip().lower()
-
-    aliases = {
-        "veo": "veo",
-        "veo_3": "veo",
-        "veo_3_1": "veo",
-        "google_veo": "veo",
-        "runway": "runway",
-        "runwayml": "runway",
-        "kling": "kling",
-        "klingai": "kling",
-    }
-
-    return aliases.get(value, value)
 
 
 async def poll_scene_task(
@@ -36,7 +20,7 @@ async def poll_scene_task(
     - Kết quả luôn trả về NormalizedStatusResult
     - Nếu provider query lỗi, trả về state='failed' để worker quyết định xử lý tiếp
     """
-    normalized_provider = _normalize_provider_name(provider)
+    normalized_provider = normalize_provider_name(provider)
 
     if normalized_provider == "veo" and not provider_operation_name:
         return NormalizedStatusResult(

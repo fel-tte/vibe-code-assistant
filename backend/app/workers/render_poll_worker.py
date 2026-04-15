@@ -15,6 +15,16 @@ from app.services.render_repository import (
     transition_scene_to_succeeded,
 )
 
+# Exponential-backoff parameters for poll retries.
+# countdown = min(_POLL_BASE_SECONDS * 2**retry_count, _POLL_MAX_SECONDS)
+_POLL_BASE_SECONDS: int = 15
+_POLL_MAX_SECONDS: int = 300
+
+
+def _poll_countdown(retry_count: int) -> int:
+    """Return the next poll countdown in seconds using bounded exponential back-off."""
+    return min(_POLL_BASE_SECONDS * (2 ** retry_count), _POLL_MAX_SECONDS)
+
 
 async def process_render_poll(db: Session, job_id: str, scene_task_id: str) -> None:
     # Local import to avoid circular import with render_queue -> render_tasks -> worker modules.
@@ -47,7 +57,11 @@ async def process_render_poll(db: Session, job_id: str, scene_task_id: str) -> N
             source="poll",
         )
         if transitioned:
-            enqueue_render_poll(job_id, scene.id, countdown=15)
+            enqueue_render_poll(
+                job_id,
+                scene.id,
+                countdown=_poll_countdown(scene.retry_count),
+            )
         return
 
     if result.state in {"failed", "canceled"}:

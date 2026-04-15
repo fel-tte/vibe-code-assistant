@@ -7,6 +7,7 @@ from app.core.config import settings
 from app.db.session import SessionLocal
 from app.services.control_plane import get_or_create_worker_override, resolve_effective_provider
 from app.schemas.provider_common import NormalizedSubmitResult
+from app.services.provider_normalize import normalize_provider_name
 from app.services.provider_router import submit_render_task
 
 
@@ -24,20 +25,7 @@ def _safe_json_loads(value: str | None) -> dict[str, Any]:
 
 
 def _normalize_provider_name(provider: str) -> str:
-    value = provider.strip().lower()
-
-    aliases = {
-        "veo": "veo",
-        "veo_3": "veo",
-        "veo_3_1": "veo",
-        "google_veo": "veo",
-        "runway": "runway",
-        "runwayml": "runway",
-        "kling": "kling",
-        "klingai": "kling",
-    }
-
-    return aliases.get(value, value)
+    return normalize_provider_name(provider)
 
 
 def _build_callback_url(provider: str) -> str:
@@ -121,45 +109,26 @@ def _resolve_metadata(raw: dict[str, Any], provider: str) -> dict[str, Any]:
 # =========================
 # Provider-specific payload builders
 # =========================
-def _build_veo_payload(raw: dict[str, Any], provider: str) -> dict[str, Any]:
+_PROVIDER_DEFAULT_MODELS: dict[str, str] = {
+    "veo": "veo_default_model",
+    "runway": "runway_default_model",
+    "kling": "kling_default_model",
+}
+
+
+def _build_provider_payload(raw: dict[str, Any], provider: str) -> dict[str, Any]:
+    """Build a normalized scene dispatch payload for any provider.
+
+    The three providers (Veo, Runway, Kling) share an identical payload shape;
+    they differ only in which ``settings`` attribute supplies the default model.
+    Unknown providers fall back to ``raw["provider_model"]`` with no default.
+    """
+    default_model_attr = _PROVIDER_DEFAULT_MODELS.get(provider)
+    default_model = getattr(settings, default_model_attr) if default_model_attr else None
     return {
         "prompt_text": _resolve_prompt_text(raw),
         "negative_prompt": raw.get("negative_prompt"),
-        "provider_model": raw.get("provider_model") or settings.veo_default_model,
-        "aspect_ratio": _resolve_aspect_ratio(raw),
-        "duration_seconds": _resolve_duration_seconds(raw, provider),
-        "prompt_image_url": raw.get("prompt_image_url"),
-        "prompt_image_gcs_uri": raw.get("prompt_image_gcs_uri"),
-        "last_frame_image_url": raw.get("last_frame_image_url"),
-        "last_frame_image_gcs_uri": raw.get("last_frame_image_gcs_uri"),
-        "seed": raw.get("seed"),
-        "enable_audio": bool(raw.get("enable_audio", False)),
-        "metadata": _resolve_metadata(raw, provider),
-    }
-
-
-def _build_runway_payload(raw: dict[str, Any], provider: str) -> dict[str, Any]:
-    return {
-        "prompt_text": _resolve_prompt_text(raw),
-        "negative_prompt": raw.get("negative_prompt"),
-        "provider_model": raw.get("provider_model") or settings.runway_default_model,
-        "aspect_ratio": _resolve_aspect_ratio(raw),
-        "duration_seconds": _resolve_duration_seconds(raw, provider),
-        "prompt_image_url": raw.get("prompt_image_url"),
-        "prompt_image_gcs_uri": raw.get("prompt_image_gcs_uri"),
-        "last_frame_image_url": raw.get("last_frame_image_url"),
-        "last_frame_image_gcs_uri": raw.get("last_frame_image_gcs_uri"),
-        "seed": raw.get("seed"),
-        "enable_audio": bool(raw.get("enable_audio", False)),
-        "metadata": _resolve_metadata(raw, provider),
-    }
-
-
-def _build_kling_payload(raw: dict[str, Any], provider: str) -> dict[str, Any]:
-    return {
-        "prompt_text": _resolve_prompt_text(raw),
-        "negative_prompt": raw.get("negative_prompt"),
-        "provider_model": raw.get("provider_model") or settings.kling_default_model,
+        "provider_model": raw.get("provider_model") or default_model,
         "aspect_ratio": _resolve_aspect_ratio(raw),
         "duration_seconds": _resolve_duration_seconds(raw, provider),
         "prompt_image_url": raw.get("prompt_image_url"),
@@ -175,31 +144,7 @@ def _build_kling_payload(raw: dict[str, Any], provider: str) -> dict[str, Any]:
 def build_scene_dispatch_payload(provider: str, request_payload_json: str) -> dict[str, Any]:
     normalized_provider = _normalize_provider_name(provider)
     raw = _safe_json_loads(request_payload_json)
-
-    if normalized_provider == "veo":
-        return _build_veo_payload(raw, normalized_provider)
-
-    if normalized_provider == "runway":
-        return _build_runway_payload(raw, normalized_provider)
-
-    if normalized_provider == "kling":
-        return _build_kling_payload(raw, normalized_provider)
-
-    # unknown provider -> generic best-effort payload
-    return {
-        "prompt_text": _resolve_prompt_text(raw),
-        "negative_prompt": raw.get("negative_prompt"),
-        "provider_model": raw.get("provider_model"),
-        "aspect_ratio": _resolve_aspect_ratio(raw),
-        "duration_seconds": _resolve_duration_seconds(raw, normalized_provider),
-        "prompt_image_url": raw.get("prompt_image_url"),
-        "prompt_image_gcs_uri": raw.get("prompt_image_gcs_uri"),
-        "last_frame_image_url": raw.get("last_frame_image_url"),
-        "last_frame_image_gcs_uri": raw.get("last_frame_image_gcs_uri"),
-        "seed": raw.get("seed"),
-        "enable_audio": bool(raw.get("enable_audio", False)),
-        "metadata": _resolve_metadata(raw, normalized_provider),
-    }
+    return _build_provider_payload(raw, normalized_provider)
 
 
 # =========================
