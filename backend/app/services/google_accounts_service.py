@@ -88,7 +88,7 @@ def pick_next_account_for_rotation(db: Session) -> GoogleAccount | None:
     """Return the active rotation-enabled account with the oldest last_used_at (round-robin)."""
     rows = (
         db.query(GoogleAccount)
-        .filter(GoogleAccount.is_active == True, GoogleAccount.rotation_enabled == True)  # noqa: E712
+        .filter(GoogleAccount.is_active.is_(True), GoogleAccount.rotation_enabled.is_(True))
         .order_by(GoogleAccount.last_used_at.asc().nullsfirst())
         .all()
     )

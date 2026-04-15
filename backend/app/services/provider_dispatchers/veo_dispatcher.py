@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import logging
+
 from app.providers.veo.adapter import VeoAdapter
 from .base import DispatchResult
 
 _adapter = VeoAdapter()
+_log = logging.getLogger(__name__)
 
 
 def _cred_from_account(account: object) -> dict:
@@ -34,8 +37,8 @@ async def dispatch_veo_video(payload: dict, db: object | None = None) -> Dispatc
             if account is not None:
                 cred_override = _cred_from_account(account)
                 mark_account_used(db, account)
-        except Exception:
-            pass  # fall back to global settings on any error
+        except Exception as exc:
+            _log.warning("Account rotation lookup failed, falling back to global settings: %s", exc)
 
     result = await _adapter.submit(
         scene_payload=payload,
