@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.db.session import SessionLocal
+from app.services.asset_collector import cache_remote_video
 from app.services.provider_ingress_signing import (
     resolve_ingress_secret,
     verify_ingress_signature,
@@ -47,7 +48,7 @@ def _load_json_payload(raw_body: bytes) -> dict:
     return payload
 
 
-def _process_normalized_callback(*, provider_key: str, headers: dict[str, str], raw_body: bytes, payload: dict):
+async def _process_normalized_callback(*, provider_key: str, headers: dict[str, str], raw_body: bytes, payload: dict):
     normalized = normalize_render_callback(
         provider=provider_key,
         headers=headers,
@@ -127,6 +128,13 @@ def _process_normalized_callback(*, provider_key: str, headers: dict[str, str], 
 
         elif normalized.state == "succeeded":
             job = scene.job
+            local_video_path = None
+            if normalized.output_video_url:
+                local_video_path = await cache_remote_video(
+                    job_id=scene.job_id,
+                    scene_index=scene.scene_index,
+                    url=normalized.output_video_url,
+                )
             transitioned = transition_scene_to_succeeded(
                 db,
                 job,
@@ -134,7 +142,7 @@ def _process_normalized_callback(*, provider_key: str, headers: dict[str, str], 
                 provider_status_raw=normalized.provider_status_raw,
                 output_video_url=normalized.output_video_url,
                 output_thumbnail_url=normalized.output_thumbnail_url,
-                local_video_path=None,
+                local_video_path=local_video_path,
                 metadata=normalized.metadata,
                 raw_response=normalized.raw_payload,
                 source="callback",
@@ -199,7 +207,7 @@ async def receive_provider_callback(provider: str, request: Request):
             detail="Invalid callback signature",
         )
 
-    return _process_normalized_callback(
+    return await _process_normalized_callback(
         provider_key=provider_key,
         headers=headers,
         raw_body=raw_body,
@@ -227,7 +235,7 @@ async def receive_provider_callback_from_signed_relay(provider: str, request: Re
             detail="Invalid relay signature",
         )
 
-    return _process_normalized_callback(
+    return await _process_normalized_callback(
         provider_key=provider_key,
         headers=headers,
         raw_body=raw_body,
