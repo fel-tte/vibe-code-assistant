@@ -482,8 +482,10 @@ def execute_decision(
 
 
 def _fallback_provider(source_provider: str) -> str:
-    options = ["veo"]
-    for option in options:
-        if option != source_provider:
-            return option
-    return source_provider
+    """Return the canonical fallback provider.
+
+    With only Veo supported the fallback is always Veo itself.
+    If provider switching logic is needed in future, add additional
+    providers to the options list.
+    """
+    return "veo"

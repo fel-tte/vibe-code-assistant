@@ -76,7 +76,9 @@ def test_decision_engine_persists_provider_override_and_release_gate():
     override = db.query(ProviderRoutingOverride).filter_by(source_provider="veo").first()
     gate = get_or_create_release_gate(db)
 
-    effective, meta = resolve_effective_provider(db, "veo")
+    # With only Veo supported, switching veo->veo stores the override row but
+    # resolve_effective_provider returns (veo, None) since source==target.
+    effective, _ = resolve_effective_provider(db, "veo")
 
     assert switch_result.status == "executed"
     assert block_result.status == "executed"

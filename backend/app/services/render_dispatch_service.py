@@ -105,10 +105,9 @@ _PROVIDER_DEFAULT_MODELS: dict[str, str] = {
 
 
 def _build_provider_payload(raw: dict[str, Any], provider: str) -> dict[str, Any]:
-    """Build a normalized scene dispatch payload for any provider.
+    """Build a normalized scene dispatch payload for Veo.
 
-    The three providers (Veo, Runway, Kling) share an identical payload shape;
-    they differ only in which ``settings`` attribute supplies the default model.
+    The default model is resolved from ``settings`` via ``_PROVIDER_DEFAULT_MODELS``.
     Unknown providers fall back to ``raw["provider_model"]`` with no default.
     """
     default_model_attr = _PROVIDER_DEFAULT_MODELS.get(provider)
